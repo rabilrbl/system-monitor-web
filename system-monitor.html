@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>System Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --bg-soft: #0d1728;
+      --panel: rgba(12, 20, 36, 0.86);
+      --panel-strong: rgba(15, 24, 43, 0.95);
+      --panel-border: rgba(148, 163, 184, 0.14);
+      --panel-hover: rgba(20, 30, 52, 0.96);
+      --text: #eff6ff;
+      --muted: #94a3b8;
+      --muted-2: #64748b;
+      --accent: #7c3aed;
+      --accent-2: #22c55e;
+      --accent-3: #38bdf8;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+      --radius: 24px;
+      --radius-sm: 16px;
+      --max: 1280px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(124, 58, 237, 0.22), transparent 28%),
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 24%),
+        linear-gradient(180deg, #07111f 0%, #08101b 55%, #050b14 100%);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 26px 26px;
+      mask-image: radial-gradient(circle at center, black 42%, transparent 88%);
+      opacity: 0.14;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 18px 14px 34px;
+    }
+
+    .hero {
+      padding: 18px;
+      border: 1px solid var(--panel-border);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(9, 15, 28, 0.95));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero-top {
+      display: flex;
+      gap: 14px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45); }
+      70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .title {
+      margin: 12px 0 6px;
+      font-size: clamp(1.8rem, 5vw, 3.25rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+    }
+
+    .subtext {
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 50ch;
+      line-height: 1.55;
+    }
+
+    .hero-side {
+      min-width: 140px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .hero-side strong {
+      display: block;
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .quick-card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-sm);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    .quick-card {
+      padding: 14px;
+      min-height: 108px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .quick-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .quick-value {
+      font-family: "JetBrains Mono", monospace;
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      margin-top: 10px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .quick-meta {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      min-height: 1.2em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.45fr 0.95fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .panel:hover,
+    .quick-card:hover {
+      background: var(--panel-hover);
+      transition: background 0.2s ease;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-note {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .badge {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(124, 58, 237, 0.14);
+      color: #c4b5fd;
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .metric-box {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .metric-box .label {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .metric-box .value {
+      margin-top: 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .metric-box .desc {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .bar-group + .bar-group { margin-top: 12px; }
+    .bar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .bar-top strong {
+      color: var(--text);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.82rem;
+    }
+
+    .bar-track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      transition: width 0.45s ease, background 0.25s ease;
+      background: linear-gradient(90deg, #38bdf8, #7c3aed);
+    }
+
+    .cores {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(16px, 1fr));
+      gap: 6px;
+      margin-top: 16px;
+      align-items: end;
+      min-height: 92px;
+    }
+
+    .core-item {
+      height: 92px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .core-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: inherit;
+      transition: height 0.35s ease, background 0.25s ease;
+    }
+
+    .gpu-chip,
+    .battery-chip,
+    .network-grid,
+    .power-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .gpu-chip,
+    .power-grid,
+    .network-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .battery-chip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mini {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .mini .k {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-weight: 700;
+    }
+
+    .mini .v {
+      margin-top: 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .battery-hero {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .battery-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: rgba(245, 158, 11, 0.12);
+      font-size: 1.5rem;
+    }
+
+    .battery-hero .value {
+      font-family: "JetBrains Mono", monospace;
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.05em;
+    }
+
+    .battery-hero .desc {
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 0.85rem;
+    }
+
+    .proc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .proc-column {
+      min-width: 0;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .proc-column h3 {
+      margin: 0 0 12px;
+      font-size: 0.85rem;
+      letter-spacing: -0.01em;
+    }
+
+    .proc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .proc-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .proc-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .proc-name {
+      min-width: 0;
+      color: var(--text);
+      font-size: 0.82rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .proc-value {
+      flex-shrink: 0;
+      color: #c4b5fd;
+      font-size: 0.78rem;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 16px;
+      text-align: center;
+      color: var(--muted-2);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.78rem;
+    }
+
+    .error-banner {
+      display: none;
+      margin-top: 16px;
+      padding: 13px 15px;
+      border-radius: 16px;
+      border: 1px solid rgba(239, 68, 68, 0.24);
+      background: rgba(127, 29, 29, 0.32);
+      color: #fecaca;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .error-banner.visible { display: block; }
+
+    @media (max-width: 1100px) {
+      .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 780px) {
+      .shell { padding: 12px 10px 24px; }
+      .hero { padding: 14px; border-radius: 24px; }
+      .hero-top { flex-direction: column; align-items: flex-start; }
+      .hero-side { text-align: left; min-width: 0; }
+      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric-row,
+      .gpu-chip,
+      .network-grid,
+      .power-grid,
+      .battery-chip,
+      .proc-grid { grid-template-columns: 1fr; }
+      .core-item { height: 72px; }
+      .cores { min-height: 72px; }
+    }
+
+    @media (max-width: 460px) {
+      .quick-grid { grid-template-columns: 1fr; }
+      .quick-card { min-height: 94px; }
+      .title { font-size: 1.85rem; }
+      .panel, .quick-card { border-radius: 18px; }
+      .hero { border-radius: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow"><span class="pulse"></span> Live system telemetry</div>
+          <h1 class="title">System Monitor</h1>
+          <div class="subtext">A cleaner live view of performance, power, battery, and busiest processes, designed to be readable on mobile first.</div>
+        </div>
+        <div class="hero-side">
+          <strong id="hostname">Linux</strong>
+          <div id="uptime">Loading uptime...</div>
+        </div>
+      </div>
+
+      <div class="quick-grid">
+        <div class="quick-card">
+          <div class="quick-label">CPU</div>
+          <div class="quick-value"><span id="cpu-pct">--</span>%</div>
+          <div class="quick-meta" id="cpu-cores-label">--</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-label">Memory</div>
+          <div class="quick-value"><span id="mem-pct">--</span>%</div>
+          <div class="quick-meta" id="mem-info">--</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-label">GPU</div>
+          <div class="quick-value" id="gpu-freq">--<span class="metric-unit">MHz</span></div>
+          <div class="quick-meta" id="gpu-util-label">--</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-label">Battery</div>
+          <div class="quick-value"><span id="bat-pct">--</span>%</div>
+          <div class="quick-meta" id="bat-status-text">--</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-label">Download</div>
+          <div class="quick-value"><span id="net-down">--</span></div>
+          <div class="quick-meta" id="net-bar-label-down">--</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-label">Package Power</div>
+          <div class="quick-value"><span id="power-pkg">--</span>W</div>
+          <div class="quick-meta" id="power-bar-label">--</div>
+        </div>
+      </div>
+
+      <div class="error-banner" id="error-banner"></div>
+    </section>
+
+    <section class="layout">
+      <div class="stack">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">CPU and memory</h2>
+              <div class="panel-note" id="cpu-model">Loading CPU model...</div>
+            </div>
+            <div class="badge">Core activity</div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-box">
+              <div class="label">CPU load</div>
+              <div class="value"><span id="cpu-pct-2">--</span>%</div>
+              <div class="desc">Overall active CPU utilization across the system.</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">Memory in use</div>
+              <div class="value" id="mem-info-2">--</div>
+              <div class="desc">Used versus total RAM.</div>
+            </div>
+          </div>
+
+          <div class="bar-group">
+            <div class="bar-top"><span>CPU usage</span><strong><span id="cpu-bar-value">--%</span> · <span id="cpu-cores-label-2">--</span></strong></div>
+            <div class="bar-track"><div class="bar-fill" id="cpu-bar"></div></div>
+          </div>
+          <div class="bar-group">
+            <div class="bar-top"><span>RAM usage</span><strong id="mem-bar-label">--</strong></div>
+            <div class="bar-track"><div class="bar-fill" id="mem-bar"></div></div>
+          </div>
+          <div class="bar-group">
+            <div class="bar-top"><span>Swap usage</span><strong id="swap-bar-label">--</strong></div>
+            <div class="bar-track"><div class="bar-fill" id="swap-bar"></div></div>
+          </div>
+
+          <div class="cores" id="cores"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Processes</h2>
+              <div class="panel-note">What is currently pushing CPU, memory, and I/O the most.</div>
+            </div>
+            <div class="badge">Top 5</div>
+          </div>
+
+          <div class="proc-grid">
+            <section class="proc-column">
+              <h3 style="color:#c4b5fd">CPU</h3>
+              <div class="proc-list" id="top-cpu"></div>
+            </section>
+            <section class="proc-column">
+              <h3 style="color:#7dd3fc">Memory</h3>
+              <div class="proc-list" id="top-mem"></div>
+            </section>
+            <section class="proc-column">
+              <h3 style="color:#86efac">Network / I/O</h3>
+              <div class="proc-list" id="top-net"></div>
+            </section>
+          </div>
+        </article>
+      </div>
+
+      <div class="stack">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Graphics</h2>
+              <div class="panel-note" id="gpu-model">GPU details will appear here</div>
+            </div>
+            <div class="badge">GPU</div>
+          </div>
+
+          <div class="gpu-chip">
+            <div class="mini">
+              <div class="k">Clock / load</div>
+              <div class="v" id="gpu-freq-2">--</div>
+            </div>
+            <div class="mini">
+              <div class="k">Activity</div>
+              <div class="v" id="gpu-util-label-2">--</div>
+            </div>
+          </div>
+
+          <div class="bar-group" style="margin-top:14px">
+            <div class="bar-top"><span>GPU activity</span><strong id="gpu-bar-value">--</strong></div>
+            <div class="bar-track"><div class="bar-fill" id="gpu-bar"></div></div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Network</h2>
+              <div class="panel-note">Separate live throughput for download and upload.</div>
+            </div>
+            <div class="badge">Network</div>
+          </div>
+
+          <div class="network-grid">
+            <div class="mini">
+              <div class="k">Download</div>
+              <div class="v"><span id="net-down-2">--</span> MB/s</div>
+            </div>
+            <div class="mini">
+              <div class="k">Upload</div>
+              <div class="v"><span id="net-up">--</span> MB/s</div>
+            </div>
+          </div>
+
+          <div class="bar-group" style="margin-top:14px">
+            <div class="bar-top"><span>Download throughput</span><strong id="net-bar-label-down-2">--</strong></div>
+            <div class="bar-track"><div class="bar-fill" id="net-bar-down"></div></div>
+          </div>
+          <div class="bar-group">
+            <div class="bar-top"><span>Upload throughput</span><strong id="net-bar-label-up">--</strong></div>
+            <div class="bar-track"><div class="bar-fill" id="net-bar-up"></div></div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Power and battery</h2>
+              <div class="panel-note">Battery health and current power draw at a glance.</div>
+            </div>
+            <div class="badge">Portable status</div>
+          </div>
+
+          <div class="battery-hero">
+            <div class="battery-icon" id="bat-icon">🔋</div>
+            <div>
+              <div class="value"><span id="bat-pct-2">--</span>%</div>
+              <div class="desc" id="bat-time">--</div>
+            </div>
+          </div>
+
+          <div class="power-grid">
+            <div class="mini">
+              <div class="k">Package draw</div>
+              <div class="v"><span id="power-pkg-2">--</span> W</div>
+            </div>
+            <div class="mini">
+              <div class="k">Battery draw</div>
+              <div class="v"><span id="bat-power">--</span> W</div>
+            </div>
+          </div>
+
+          <div class="bar-group" style="margin-top:14px">
+            <div class="bar-top"><span>Power scale</span><strong id="power-bar-label-2">--</strong></div>
+            <div class="bar-track"><div class="bar-fill" id="power-bar"></div></div>
+          </div>
+          <div class="bar-group">
+            <div class="bar-top"><span>Battery level</span><strong id="bat-bar-label">--</strong></div>
+            <div class="bar-track"><div class="bar-fill" id="bat-bar"></div></div>
+          </div>
+
+          <div class="battery-chip" style="margin-top:14px">
+            <div class="mini"><div class="k">Status</div><div class="v" id="bat-status-text-2">--</div></div>
+            <div class="mini"><div class="k">Mode</div><div class="v" id="bat-status">--</div></div>
+            <div class="mini"><div class="k">Voltage</div><div class="v" id="bat-voltage">--</div></div>
+            <div class="mini"><div class="k">Current</div><div class="v" id="bat-current">--</div></div>
+            <div class="mini"><div class="k">Cycles</div><div class="v" id="bat-cycles">--</div></div>
+            <div class="mini"><div class="k">Updated</div><div class="v" id="timestamp-inline">--</div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="footer" id="timestamp">--</div>
+  </main>
+
+  <script>
+    function showError(msg) {
+      var el = document.getElementById('error-banner');
+      el.textContent = msg;
+      el.className = 'error-banner visible';
+    }
+
+    function setText(id, value) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function setHTML(id, value) {
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = value;
+    }
+
+    function req(url, callback) {
+      fetch(url + '?_=' + Date.now())
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(function(text) { try { callback(text); } catch(e) { console.error(e); } })
+        .catch(function(e) { showError('Fetch failed: ' + url + ' - ' + e.message); console.error(e); });
+    }
+
+    function reqJSON(url, callback) {
+      fetch(url + '?_=' + Date.now())
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function(data) { try { callback(data); } catch(e) { console.error('callback error for ' + url, e); } })
+        .catch(function(e) { showError('Fetch failed: ' + url + ' - ' + e.message); console.error('fetch error for ' + url, e); });
+    }
+
+    function fmt(n) {
+      if (n === undefined || n === null || isNaN(n)) return '--';
+      return n.toFixed(1);
+    }
+
+    function fmtGB(b) {
+      if (!b) return '--';
+      return (b / 1024 / 1024 / 1024).toFixed(1) + ' GB';
+    }
+
+    function colorBar(pct) {
+      if (pct < 50) return 'linear-gradient(90deg, #22c55e, #10b981)';
+      if (pct < 80) return 'linear-gradient(90deg, #f59e0b, #f97316)';
+      return 'linear-gradient(90deg, #ef4444, #dc2626)';
+    }
+
+    function procRow(name, val, unit) {
+      var row = document.createElement('div');
+      row.className = 'proc-item';
+      var n = document.createElement('span');
+      n.className = 'proc-name';
+      n.textContent = name;
+      n.title = name;
+      var v = document.createElement('span');
+      v.className = 'proc-value';
+      v.textContent = val + unit;
+      row.appendChild(n);
+      row.appendChild(v);
+      return row;
+    }
+
+    function update() {
+      document.getElementById('error-banner').className = 'error-banner';
+
+      req('/api/system/stat', function(text) {
+        var lines = text.split('\n');
+        var totalCpu = 0;
+        var currCpu = null;
+        window.prevCpuStat = window.prevCpuStat || null;
+        for (var i = 0; i < lines.length; i++) {
+          var l = lines[i];
+          if (l.indexOf('cpu ') !== 0) continue;
+          var parts = l.split(/\s+/);
+          var user = parseInt(parts[1]) || 0;
+          var nice = parseInt(parts[2]) || 0;
+          var system = parseInt(parts[3]) || 0;
+          var idle = parseInt(parts[4]) || 0;
+          var iowait = parseInt(parts[5]) || 0;
+          var irq = parseInt(parts[6]) || 0;
+          var softirq = parseInt(parts[7]) || 0;
+          var total = user + nice + system + idle + iowait + irq + softirq;
+          var active = total - idle - iowait;
+          currCpu = { total: total, active: active };
+          break;
+        }
+        if (currCpu && window.prevCpuStat) {
+          var dt = currCpu.total - window.prevCpuStat.total;
+          var da = currCpu.active - window.prevCpuStat.active;
+          totalCpu = dt > 0 ? (da * 100 / dt) : 0;
+        }
+        if (currCpu) window.prevCpuStat = currCpu;
+
+        setText('cpu-pct', fmt(totalCpu));
+        setText('cpu-pct-2', fmt(totalCpu));
+        setText('cpu-bar-value', fmt(totalCpu) + '%');
+        var bar = document.getElementById('cpu-bar');
+        bar.style.width = totalCpu + '%';
+        bar.style.background = colorBar(totalCpu);
+      });
+
+      req('/api/system/loadavg', function(text) {
+        var parts = text.trim().split(/\s+/);
+        var label = (parts[0] || '--') + ' load avg';
+        setText('cpu-cores-label', label);
+        setText('cpu-cores-label-2', label);
+      });
+
+      req('/api/system/cpu_model', function(text) {
+        setText('cpu-model', text.trim());
+        var host = text.trim().split(' @ ')[0].split(' CPU')[0];
+        if (host) setText('hostname', host);
+      });
+
+      req('/api/system/meminfo', function(text) {
+        var lines = text.split('\n');
+        var mem = {};
+        for (var i = 0; i < lines.length; i++) {
+          var idx = lines[i].indexOf(':');
+          if (idx < 0) continue;
+          var key = lines[i].substring(0, idx).trim();
+          var val = parseInt(lines[i].substring(idx + 1).trim()) || 0;
+          mem[key] = val * 1024;
+        }
+        var total = mem['MemTotal'] || 0;
+        var avail = mem['MemAvailable'] || mem['MemFree'] || 0;
+        var used = total - avail;
+        var memPct = total > 0 ? (used * 100 / total) : 0;
+        var swapTotal = mem['SwapTotal'] || 0;
+        var swapFree = mem['SwapFree'] || 0;
+        var swapUsed = swapTotal - swapFree;
+        var swapPct = swapTotal > 0 ? (swapUsed * 100 / swapTotal) : 0;
+
+        setText('mem-pct', fmt(memPct));
+        setText('mem-info', fmtGB(used) + ' / ' + fmtGB(total));
+        setText('mem-info-2', fmtGB(used) + ' / ' + fmtGB(total));
+        document.getElementById('mem-bar').style.width = memPct + '%';
+        document.getElementById('mem-bar').style.background = colorBar(memPct);
+        setText('mem-bar-label', fmt(memPct) + '%');
+        document.getElementById('swap-bar').style.width = swapPct + '%';
+        document.getElementById('swap-bar').style.background = colorBar(swapPct);
+        setText('swap-bar-label', fmt(swapPct) + '%');
+      });
+
+      reqJSON('/api/system/intel_gpu', function(data) {
+        if (data && data.name) {
+          setHTML('gpu-freq', (data.freq || '--') + '<span class="metric-unit">MHz</span>');
+          setText('gpu-freq-2', (data.freq || '--') + ' / ' + (data.maxFreq || '--') + ' MHz');
+          setText('gpu-model', data.name);
+          var pct = data.maxFreq > 0 ? Math.round((data.freq / data.maxFreq) * 100) : 0;
+          var label = (data.freq || '--') + ' / ' + (data.maxFreq || '--') + ' MHz';
+          setText('gpu-util-label', label);
+          setText('gpu-util-label-2', label);
+          setText('gpu-bar-value', pct + '%');
+          document.getElementById('gpu-bar').style.width = pct + '%';
+          document.getElementById('gpu-bar').style.background = colorBar(pct);
+        } else {
+          reqJSON('/api/system/gpu', function(gpu) {
+            if (gpu && gpu.name) {
+              setHTML('gpu-freq', (gpu.utilization || '--') + '<span class="metric-unit">%</span>');
+              setText('gpu-freq-2', (gpu.utilization || '--') + '% active');
+              setText('gpu-model', gpu.name);
+              setText('gpu-util-label', gpu.name);
+              setText('gpu-util-label-2', gpu.name);
+              setText('gpu-bar-value', (gpu.utilization || 0) + '%');
+              document.getElementById('gpu-bar').style.width = (gpu.utilization || 0) + '%';
+              document.getElementById('gpu-bar').style.background = colorBar(gpu.utilization || 0);
+            }
+          });
+        }
+      });
+
+      reqJSON('/api/system/network', function(data) {
+        if (!data) return;
+        var rx = data.rx_bytes || 0;
+        var tx = data.tx_bytes || 0;
+        setText('net-down', fmt(rx / 1e6));
+        setText('net-down-2', fmt(rx / 1e6));
+        setText('net-up', fmt(tx / 1e6));
+        var downLabel = fmt((rx * 8) / 1e6) + ' Mbps';
+        var upLabel = fmt((tx * 8) / 1e6) + ' Mbps';
+        setText('net-bar-label-down', downLabel);
+        setText('net-bar-label-down-2', downLabel);
+        setText('net-bar-label-up', upLabel);
+        document.getElementById('net-bar-down').style.width = Math.min(100, (rx / 12.5e6) * 100) + '%';
+        document.getElementById('net-bar-up').style.width = Math.min(100, (tx / 12.5e6) * 100) + '%';
+        document.getElementById('net-bar-down').style.background = 'linear-gradient(90deg, #38bdf8, #2563eb)';
+        document.getElementById('net-bar-up').style.background = 'linear-gradient(90deg, #22c55e, #16a34a)';
+      });
+
+      reqJSON('/api/system/top_cpu', function(data) {
+        var el = document.getElementById('top-cpu');
+        el.innerHTML = '';
+        if (data && data.length) {
+          for (var i = 0; i < Math.min(data.length, 5); i++) el.appendChild(procRow(data[i].name, fmt(data[i].cpu), '%'));
+        }
+      });
+
+      reqJSON('/api/system/top_mem', function(data) {
+        var el = document.getElementById('top-mem');
+        el.innerHTML = '';
+        if (data && data.length) {
+          for (var i = 0; i < Math.min(data.length, 5); i++) el.appendChild(procRow(data[i].name, fmt(data[i].mem), '%'));
+        }
+      });
+
+      reqJSON('/api/system/top_net', function(data) {
+        var el = document.getElementById('top-net');
+        el.innerHTML = '';
+        if (data && data.length) {
+          for (var i = 0; i < Math.min(data.length, 5); i++) {
+            var kbps = Math.round(data[i].speed / 1024);
+            el.appendChild(procRow(data[i].name, kbps, ' KB/s'));
+          }
+        }
+      });
+
+      req('/api/system/uptime', function(text) {
+        var uptimeSec = parseFloat(text.trim()) || 0;
+        var days = Math.floor(uptimeSec / 86400);
+        var hrs = Math.floor((uptimeSec % 86400) / 3600);
+        var mins = Math.floor((uptimeSec % 3600) / 60);
+        setText('uptime', 'Up ' + days + 'd ' + hrs + 'h ' + mins + 'm');
+      });
+
+      reqJSON('/api/system/power', function(data) {
+        if (data) {
+          var pkgW = data.package || 0;
+          setText('power-pkg', pkgW.toFixed(1));
+          setText('power-pkg-2', pkgW.toFixed(1));
+          var label = pkgW.toFixed(1) + ' W';
+          setText('power-bar-label', label);
+          setText('power-bar-label-2', label);
+          document.getElementById('power-bar').style.width = Math.min(100, (pkgW / 30) * 100) + '%';
+          document.getElementById('power-bar').style.background = 'linear-gradient(90deg, #f59e0b, #f97316)';
+        }
+      });
+
+      reqJSON('/api/system/battery', function(data) {
+        if (data) {
+          var pct = data.capacity || 0;
+          setText('bat-pct', pct);
+          setText('bat-pct-2', pct);
+          document.getElementById('bat-bar').style.width = pct + '%';
+          setText('bat-bar-label', pct + '%');
+
+          var icon = '🔋';
+          if (data.ac_online) icon = '🔌';
+          if (data.status === 'Charging') icon = '⚡';
+          if (data.status === 'Full') icon = '✅';
+          setText('bat-icon', icon);
+
+          setText('bat-status-text', data.status || '--');
+          setText('bat-status-text-2', data.status || '--');
+          setText('bat-voltage', ((data.voltage || 0) / 1e6).toFixed(2) + ' V');
+          setText('bat-current', ((data.current || 0) / 1e6).toFixed(3) + ' A');
+          setText('bat-cycles', data.cycle_count || 0);
+
+          var powerW = data.power || 0;
+          setText('bat-power', powerW.toFixed(1));
+          setText('bat-status', data.ac_online ? 'Charging' : 'Discharging');
+
+          if (data.time_remaining !== null) {
+            var mins = data.time_remaining;
+            if (mins < 60) setText('bat-time', mins + ' min remaining');
+            else setText('bat-time', Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm remaining');
+          } else {
+            setText('bat-time', data.ac_online ? 'Plugged in' : '--');
+          }
+
+          var batBar = document.getElementById('bat-bar');
+          batBar.style.background = pct < 20 ? 'linear-gradient(90deg, #ef4444, #dc2626)' : pct < 50 ? 'linear-gradient(90deg, #f59e0b, #f97316)' : 'linear-gradient(90deg, #22c55e, #10b981)';
+        }
+      });
+
+      var now = new Date();
+      var stamp = now.toLocaleString('en-IN', { timeZone: 'Asia/Calcutta' });
+      setText('timestamp', 'Last updated · ' + stamp);
+      setText('timestamp-inline', stamp.split(', ').slice(-1)[0] || stamp);
+    }
+
+    function updateCores() {
+      req('/api/system/cores', function(text) {
+        var lines = text.split('\n');
+        var el = document.getElementById('cores');
+        el.innerHTML = '';
+        for (var i = 0; i < lines.length; i++) {
+          var parts = lines[i].split('\t');
+          if (parts.length < 2) continue;
+          var pct = parseFloat(parts[0]) || 0;
+          var label = parts[1] || ('C' + i);
+          var item = document.createElement('div');
+          item.className = 'core-item';
+          item.title = label + ': ' + pct.toFixed(1) + '%';
+          var fill = document.createElement('div');
+          fill.className = 'core-fill';
+          fill.style.height = pct + '%';
+          fill.style.background = colorBar(pct);
+          item.appendChild(fill);
+          el.appendChild(item);
+        }
+      });
+    }
+
+    update();
+    updateCores();
+    setInterval(update, 2000);
+    setInterval(updateCores, 3000);
+  </script>
+</body>
+</html>
