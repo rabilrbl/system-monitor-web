@@ -16,16 +16,36 @@ cargo run --release
 Then open <http://localhost:8765>.
 
 ## Run with Docker
-Basic container run:
+Most installs should mount the host `/sys` read-only so hardware and power telemetry work correctly.
+
+Build locally and run the image:
 ```bash
 docker build -t system-monitor-web .
-docker run --rm -p 8765:8765 system-monitor-web
+docker run --rm -p 8765:8765 -v /sys:/sys:ro system-monitor-web
+```
+
+Run the published GHCR image directly:
+```bash
+docker run --rm -p 8765:8765 -v /sys:/sys:ro ghcr.io/rabilrbl/system-monitor-web:latest
+```
+
+Docker Compose with the published GHCR image:
+```yaml
+services:
+  system-monitor-web:
+    image: ghcr.io/rabilrbl/system-monitor-web:latest
+    container_name: system-monitor-web
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    volumes:
+      - /sys:/sys:ro
 ```
 
 ## Real host system metrics from Docker
 If you run the container normally, some metrics will reflect the container namespace rather than the full host.
 
-For the dashboard to see the actual host more accurately, run it with host PID and host network access:
+For the dashboard to see the actual host more accurately, run it with host PID, host network access, and the host `/sys` mount:
 
 ```bash
 docker run -d \
@@ -37,6 +57,19 @@ docker run -d \
   ghcr.io/rabilrbl/system-monitor-web:latest
 ```
 
+Docker Compose equivalent:
+```yaml
+services:
+  system-monitor-web:
+    image: ghcr.io/rabilrbl/system-monitor-web:latest
+    container_name: system-monitor-web
+    restart: unless-stopped
+    pid: host
+    network_mode: host
+    volumes:
+      - /sys:/sys:ro
+```
+
 ### Why these flags matter
 - `--pid=host` lets process listings and `/proc`-based stats reflect the host
 - `--network=host` lets network counters reflect the host network namespace
@@ -46,6 +79,7 @@ docker run -d \
 - The app listens on port `8765`, so with `--network=host` you can open:
   - <http://localhost:8765>
   - or `http://<your-host-ip>:8765`
+- If you exclude `-v /sys:/sys:ro`, the app still runs, but sysfs-backed telemetry will be incomplete or missing. Battery, thermal, GPU, fan, and other hardware/power-related metrics may disappear or show the container's limited view instead of the real host.
 - Some low-level power/GPU sensors can still depend on host kernel permissions and hardware support.
 - Hardware support note: this dashboard has only been tested on Intel-based hardware so far. We do not currently have access to AMD-based systems or machines with NVIDIA hardware, so compatibility outside Intel remains unverified.
 - On locked-down hosts, you may need additional mounts or privileges for certain sensors, but the command above should cover the common case without going straight to `--privileged`.
