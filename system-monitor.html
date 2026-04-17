@@ -873,18 +873,67 @@
       if (el) el.innerHTML = value;
     }
 
-    function req(url, callback) {
-      fetch(url + '?_=' + Date.now())
-        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-        .then(function(text) { try { callback(text); } catch(e) { console.error(e); } })
-        .catch(function(e) { showError('Fetch failed: ' + url + ' - ' + e.message); console.error(e); });
+    var POLL_INTERVALS = { update: 2000, cores: 3000 };
+    var pollState = {
+      update: { timer: null },
+      cores: { timer: null },
+      generation: 0,
+      running: false
+    };
+    var activeFetchControllers = new Set();
+
+    function isPageActive() {
+      return document.visibilityState === 'visible' && document.hasFocus();
     }
 
-    function reqJSON(url, callback) {
-      fetch(url + '?_=' + Date.now())
+    function abortActiveFetches() {
+      activeFetchControllers.forEach(function(controller) {
+        controller.abort();
+      });
+      activeFetchControllers.clear();
+    }
+
+    function trackedFetch(url) {
+      var controller = new AbortController();
+      activeFetchControllers.add(controller);
+      return fetch(url + '?_=' + Date.now(), { signal: controller.signal })
+        .finally(function() {
+          activeFetchControllers.delete(controller);
+        });
+    }
+
+    function req(url, callback, generation) {
+      if (!isPageActive()) return;
+      var requestGeneration = generation == null ? pollState.generation : generation;
+      trackedFetch(url)
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(function(text) {
+          if (requestGeneration !== pollState.generation || !isPageActive()) return;
+          try { callback(text); } catch(e) { console.error(e); }
+        })
+        .catch(function(e) {
+          if (e && e.name === 'AbortError') return;
+          if (!isPageActive() || requestGeneration !== pollState.generation) return;
+          showError('Fetch failed: ' + url + ' - ' + e.message);
+          console.error(e);
+        });
+    }
+
+    function reqJSON(url, callback, generation) {
+      if (!isPageActive()) return;
+      var requestGeneration = generation == null ? pollState.generation : generation;
+      trackedFetch(url)
         .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(function(data) { try { callback(data); } catch(e) { console.error('callback error for ' + url, e); } })
-        .catch(function(e) { showError('Fetch failed: ' + url + ' - ' + e.message); console.error('fetch error for ' + url, e); });
+        .then(function(data) {
+          if (requestGeneration !== pollState.generation || !isPageActive()) return;
+          try { callback(data); } catch(e) { console.error('callback error for ' + url, e); }
+        })
+        .catch(function(e) {
+          if (e && e.name === 'AbortError') return;
+          if (!isPageActive() || requestGeneration !== pollState.generation) return;
+          showError('Fetch failed: ' + url + ' - ' + e.message);
+          console.error('fetch error for ' + url, e);
+        });
     }
 
     function fmt(n) {
@@ -940,6 +989,7 @@
     }
 
     function update() {
+      if (!isPageActive()) return;
       document.getElementById('error-banner').className = 'error-banner';
 
       req('/api/system/stat', function(text) {
@@ -1202,6 +1252,7 @@
     }
 
     function updateCores() {
+      if (!isPageActive()) return;
       req('/api/system/cores', function(text) {
         var lines = text.split('\n');
         var el = document.getElementById('cores');
@@ -1249,10 +1300,71 @@
       });
     }
 
-    update();
-    updateCores();
-    setInterval(update, 2000);
-    setInterval(updateCores, 3000);
+    function schedulePoll(kind, runner, delay) {
+      clearTimeout(pollState[kind].timer);
+      pollState[kind].timer = setTimeout(function tick() {
+        if (!pollState.running || !isPageActive()) {
+          pollState[kind].timer = null;
+          return;
+        }
+        runner();
+        pollState[kind].timer = setTimeout(tick, delay);
+      }, delay);
+    }
+
+    function startPolling(immediate) {
+      if (!isPageActive()) return;
+      if (pollState.running && !immediate) return;
+      pollState.generation += 1;
+      pollState.running = true;
+      abortActiveFetches();
+      clearTimeout(pollState.update.timer);
+      clearTimeout(pollState.cores.timer);
+      pollState.update.timer = null;
+      pollState.cores.timer = null;
+      if (immediate) {
+        update();
+        updateCores();
+      }
+      schedulePoll('update', update, POLL_INTERVALS.update);
+      schedulePoll('cores', updateCores, POLL_INTERVALS.cores);
+    }
+
+    function stopPolling() {
+      pollState.running = false;
+      pollState.generation += 1;
+      clearTimeout(pollState.update.timer);
+      clearTimeout(pollState.cores.timer);
+      pollState.update.timer = null;
+      pollState.cores.timer = null;
+      abortActiveFetches();
+    }
+
+    function syncPollingState(immediate) {
+      if (isPageActive()) {
+        startPolling(immediate);
+      } else {
+        stopPolling();
+      }
+    }
+
+    document.addEventListener('visibilitychange', function() {
+      syncPollingState(!document.hidden);
+    });
+    window.addEventListener('focus', function() {
+      syncPollingState(true);
+    });
+    window.addEventListener('blur', function() {
+      syncPollingState(false);
+    });
+    window.addEventListener('pageshow', function() {
+      syncPollingState(true);
+    });
+    window.addEventListener('pagehide', function() {
+      stopPolling();
+    });
+
+    syncPollingState(true);
   </script>
 </body>
 </html>
