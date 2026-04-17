@@ -70,7 +70,9 @@ This repo also ships Rust-native CI and release workflows:
   - Builds release binaries on push to `main` for:
     - `x86_64-unknown-linux-gnu`
     - `aarch64-unknown-linux-gnu`
+    - `riscv64gc-unknown-linux-gnu`
     - `x86_64-apple-darwin`
     - `aarch64-apple-darwin`
     - `x86_64-pc-windows-msvc`
+    - `aarch64-pc-windows-msvc`
   - Publishes/updates a rolling GitHub Release tag: `main-latest`
