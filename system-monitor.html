@@ -191,11 +191,14 @@
       grid-template-columns: 1.45fr 0.95fr;
       gap: 16px;
       margin-top: 16px;
+      align-items: start;
     }
 
     .stack {
       display: grid;
       gap: 16px;
+      align-content: start;
+      align-self: start;
     }
 
     .panel {
@@ -310,29 +313,79 @@
     }
 
     .cores {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(16px, 1fr));
-      gap: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
       margin-top: 16px;
-      align-items: end;
-      min-height: 92px;
+      align-items: stretch;
+      justify-content: flex-start;
+      min-height: 0;
     }
 
     .core-item {
-      height: 92px;
+      flex: 1 1 154px;
+      min-width: 142px;
+      max-width: 192px;
+      min-height: 58px;
+      padding: 12px 14px;
       border-radius: 999px;
       background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
       overflow: hidden;
       position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .core-main {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .core-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .core-label {
+      min-width: 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .core-value {
+      flex-shrink: 0;
+      color: var(--text);
+      font-size: 0.84rem;
+      font-weight: 700;
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .core-track {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
     }
 
     .core-fill {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      height: 100%;
+      width: 0%;
       border-radius: inherit;
-      transition: height 0.35s ease, background 0.25s ease;
+      transition: width 0.35s ease, background 0.25s ease;
     }
 
     .gpu-chip,
@@ -536,8 +589,12 @@
       .temperature-grid,
       .battery-chip,
       .proc-grid { grid-template-columns: 1fr; }
-      .core-item { height: 72px; }
-      .cores { min-height: 72px; }
+      .core-item {
+        flex-basis: calc(50% - 5px);
+        min-width: calc(50% - 5px);
+        max-width: none;
+        min-height: 54px;
+      }
     }
 
     @media (max-width: 460px) {
@@ -546,6 +603,10 @@
       .title { font-size: 1.85rem; }
       .panel, .quick-card { border-radius: 18px; }
       .hero { border-radius: 22px; }
+      .core-item {
+        flex-basis: 100%;
+        min-width: 100%;
+      }
     }
   </style>
 </head>
@@ -840,6 +901,13 @@
       if (pct < 50) return 'linear-gradient(90deg, #22c55e, #10b981)';
       if (pct < 80) return 'linear-gradient(90deg, #f59e0b, #f97316)';
       return 'linear-gradient(90deg, #ef4444, #dc2626)';
+    }
+
+    function formatCoreLabel(label, index) {
+      if (!label) return 'Core ' + index;
+      var match = String(label).match(/(\d+)$/);
+      if (match) return 'Core ' + match[1];
+      return String(label).replace(/[_-]+/g, ' ').replace(/\b\w/g, function(ch) { return ch.toUpperCase(); });
     }
 
     function procRow(name, val, unit, opts) {
@@ -1142,15 +1210,40 @@
           var parts = lines[i].split('\t');
           if (parts.length < 2) continue;
           var pct = parseFloat(parts[0]) || 0;
-          var label = parts[1] || ('C' + i);
+          var label = formatCoreLabel(parts[1], i);
           var item = document.createElement('div');
           item.className = 'core-item';
           item.title = label + ': ' + pct.toFixed(1) + '%';
+
+          var main = document.createElement('div');
+          main.className = 'core-main';
+
+          var head = document.createElement('div');
+          head.className = 'core-head';
+
+          var name = document.createElement('span');
+          name.className = 'core-label';
+          name.textContent = label;
+
+          var value = document.createElement('span');
+          value.className = 'core-value';
+          value.textContent = fmt(pct) + '%';
+
+          head.appendChild(name);
+          head.appendChild(value);
+
+          var track = document.createElement('div');
+          track.className = 'core-track';
+
           var fill = document.createElement('div');
           fill.className = 'core-fill';
-          fill.style.height = pct + '%';
+          fill.style.width = Math.max(4, Math.min(100, pct)) + '%';
           fill.style.background = colorBar(pct);
-          item.appendChild(fill);
+
+          track.appendChild(fill);
+          main.appendChild(head);
+          main.appendChild(track);
+          item.appendChild(main);
           el.appendChild(item);
         }
       });
