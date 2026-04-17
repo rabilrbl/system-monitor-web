@@ -480,20 +480,33 @@ fn get_mem_info() -> MemInfo {
     }
 }
 
-fn command_output(cmd: &str) -> Option<String> {
-    let output = Command::new("sh").arg("-c").arg(cmd).output().ok()?;
+fn ps_output(sort_arg: &str) -> Option<String> {
+    let output = Command::new("ps")
+        .arg("aux")
+        .arg(sort_arg)
+        .arg("--no-headers")
+        .arg("-ww")
+        .output()
+        .ok()?;
     if !output.status.success() {
         return None;
     }
     String::from_utf8(output.stdout).ok()
 }
 
+fn is_helper_process(name: &str) -> bool {
+    Path::new(name)
+        .file_name()
+        .and_then(|part| part.to_str())
+        .is_some_and(|base| matches!(base, "ps"))
+}
+
 fn get_top_cpu() -> Vec<TopCpuProcess> {
-    let Some(output) = command_output("ps aux --sort=-%cpu --no-headers -ww | head -5") else {
+    let Some(output) = ps_output("--sort=-%cpu") else {
         return Vec::new();
     };
 
-    output
+    let mut result = output
         .lines()
         .filter_map(|line| {
             let parts = line.split_whitespace().collect::<Vec<_>>();
@@ -501,21 +514,23 @@ fn get_top_cpu() -> Vec<TopCpuProcess> {
                 return None;
             }
             let name = parts[10].to_string();
-            let cpu = parts[2].parse::<f64>().unwrap_or(0.0);
-            if cpu <= 0.0 {
+            if is_helper_process(&name) {
                 return None;
             }
+            let cpu = parts[2].parse::<f64>().unwrap_or(0.0);
             Some(TopCpuProcess { name, cpu })
         })
-        .collect()
+        .collect::<Vec<_>>();
+    result.truncate(5);
+    result
 }
 
 fn get_top_mem() -> Vec<TopMemProcess> {
-    let Some(output) = command_output("ps aux --sort=-%mem --no-headers -ww | head -5") else {
+    let Some(output) = ps_output("--sort=-%mem") else {
         return Vec::new();
     };
 
-    output
+    let mut result = output
         .lines()
         .filter_map(|line| {
             let parts = line.split_whitespace().collect::<Vec<_>>();
@@ -523,10 +538,15 @@ fn get_top_mem() -> Vec<TopMemProcess> {
                 return None;
             }
             let name = parts[10].to_string();
+            if is_helper_process(&name) {
+                return None;
+            }
             let mem = parts[3].parse::<f64>().unwrap_or(0.0);
             Some(TopMemProcess { name, mem })
         })
-        .collect()
+        .collect::<Vec<_>>();
+    result.truncate(5);
+    result
 }
 
 fn parse_net_dev_totals(content: &str) -> (u64, u64) {

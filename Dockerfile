@@ -6,6 +6,9 @@ COPY system-monitor.html ./system-monitor.html
 RUN cargo build --release
 
 FROM alpine:3.22
+RUN apk add --no-cache \
+    iproute2 \
+    procps
 WORKDIR /app
 COPY --from=build /app/target/release/system-monitor-web /usr/local/bin/system-monitor-web
 ENV PORT=8765

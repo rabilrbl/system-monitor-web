@@ -71,7 +71,7 @@ services:
 ```
 
 ### Why these flags matter
-- `--pid=host` lets process listings and `/proc`-based stats reflect the host
+- `--pid=host` lets process listings and `/proc`-based stats reflect the host, including Top Workloads process views like CPU and memory leaders
 - `--network=host` lets network counters reflect the host network namespace
 - `-v /sys:/sys:ro` exposes host sysfs data like battery, GPU, and power-related metrics when available
 
