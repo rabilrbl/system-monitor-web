@@ -45,7 +45,7 @@ docker run -d \
   - <http://localhost:8765>
   - or `http://<your-host-ip>:8765`
 - Some low-level power/GPU sensors can still depend on host kernel permissions and hardware support.
-- Hardware support note: this dashboard has only been tested on Intel hardware so far. AMD and NVIDIA code paths exist, but they are currently unverified because we do not have access to AMD or NVIDIA machines for testing.
+- Hardware support note: this dashboard has only been tested on Intel-based hardware so far. We do not currently have access to AMD-based systems or machines with NVIDIA hardware, so compatibility outside Intel remains unverified.
 - On locked-down hosts, you may need additional mounts or privileges for certain sensors, but the command above should cover the common case without going straight to `--privileged`.
 
 ## GitHub Container Registry
