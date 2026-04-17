@@ -121,7 +121,7 @@ jobs:
 
           tag="v${cargo_version}"
           echo "release_tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "release_name=System Monitor Web - $tag" >> "$GITHUB_OUTPUT"
+          echo "release_name=SMW - $tag" >> "$GITHUB_OUTPUT"
 
       - name: Create and push version tag
         shell: bash
