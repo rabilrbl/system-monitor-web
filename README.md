@@ -3,12 +3,14 @@
 A lightweight self-hosted system monitor web UI with a modern mobile-friendly dashboard.
 
 ## Files
-- `system-monitor.html` - frontend dashboard
-- `system-monitor-server.js` - tiny Node.js server and data API
+- `system-monitor.html` - embedded frontend dashboard (served from Rust binary)
+- `src/main.rs` - Rust server entrypoint
+- `src/lib.rs` - API handlers + telemetry collectors
+- `src/model.rs` - JSON models
 
 ## Run locally
 ```bash
-node system-monitor-server.js
+cargo run --release
 ```
 
 Then open <http://localhost:8765>.
