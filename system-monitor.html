@@ -338,14 +338,16 @@
     .gpu-chip,
     .battery-chip,
     .network-grid,
-    .power-grid {
+    .power-grid,
+    .temperature-grid {
       display: grid;
       gap: 12px;
     }
 
     .gpu-chip,
     .power-grid,
-    .network-grid {
+    .network-grid,
+    .temperature-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -413,6 +415,11 @@
       gap: 14px;
     }
 
+    .proc-grid.single-column {
+      grid-template-columns: 1fr;
+      margin-top: 14px;
+    }
+
     .proc-column {
       min-width: 0;
       padding: 14px;
@@ -425,6 +432,13 @@
       margin: 0 0 12px;
       font-size: 0.85rem;
       letter-spacing: -0.01em;
+    }
+
+    .proc-subnote {
+      margin: -4px 0 12px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.4;
     }
 
     .proc-list {
@@ -444,6 +458,13 @@
 
     .proc-item:last-child { border-bottom: none; padding-bottom: 0; }
 
+    .proc-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .proc-name {
       min-width: 0;
       color: var(--text);
@@ -451,6 +472,20 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .proc-name.wrap {
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+      word-break: break-all;
+      line-height: 1.35;
+    }
+
+    .proc-meta {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-family: "JetBrains Mono", monospace;
     }
 
     .proc-value {
@@ -498,6 +533,7 @@
       .gpu-chip,
       .network-grid,
       .power-grid,
+      .temperature-grid,
       .battery-chip,
       .proc-grid { grid-template-columns: 1fr; }
       .core-item { height: 72px; }
@@ -607,8 +643,8 @@
         <article class="panel">
           <div class="panel-head">
             <div>
-              <h2 class="panel-title">Processes</h2>
-              <div class="panel-note">What is currently pushing CPU, memory, and I/O the most.</div>
+              <h2 class="panel-title">Top workloads</h2>
+              <div class="panel-note">CPU, memory, interfaces, and process bandwidth leaders right now.</div>
             </div>
             <div class="badge">Top 5</div>
           </div>
@@ -623,8 +659,16 @@
               <div class="proc-list" id="top-mem"></div>
             </section>
             <section class="proc-column">
-              <h3 style="color:#86efac">Network / I/O</h3>
+              <h3 style="color:#86efac">Network interfaces</h3>
               <div class="proc-list" id="top-net"></div>
+            </section>
+          </div>
+
+          <div class="proc-grid single-column">
+            <section class="proc-column">
+              <h3 style="color:#4ade80">Live network usage by process</h3>
+              <div class="proc-subnote">Aggregated across each process's established connections. Showing executable path plus PID.</div>
+              <div class="proc-list" id="bandwidth-procs"></div>
             </section>
           </div>
         </article>
@@ -685,6 +729,18 @@
             <div class="bar-top"><span>Upload throughput</span><strong id="net-bar-label-up">--</strong></div>
             <div class="bar-track"><div class="bar-fill" id="net-bar-up"></div></div>
           </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Temperatures</h2>
+              <div class="panel-note">All thermal sensors exposed by the host, sorted hottest first.</div>
+            </div>
+            <div class="badge">Sensors</div>
+          </div>
+
+          <div class="temperature-grid" id="temperatures"></div>
         </article>
 
         <article class="panel">
@@ -786,17 +842,31 @@
       return 'linear-gradient(90deg, #ef4444, #dc2626)';
     }
 
-    function procRow(name, val, unit) {
+    function procRow(name, val, unit, opts) {
+      opts = opts || {};
       var row = document.createElement('div');
       row.className = 'proc-item';
+
+      var main = document.createElement('div');
+      main.className = 'proc-main';
+
       var n = document.createElement('span');
-      n.className = 'proc-name';
+      n.className = 'proc-name' + (opts.wrapName ? ' wrap' : '');
       n.textContent = name;
       n.title = name;
+      main.appendChild(n);
+
+      if (opts.meta) {
+        var meta = document.createElement('div');
+        meta.className = 'proc-meta';
+        meta.textContent = opts.meta;
+        main.appendChild(meta);
+      }
+
       var v = document.createElement('span');
       v.className = 'proc-value';
       v.textContent = val + unit;
-      row.appendChild(n);
+      row.appendChild(main);
       row.appendChild(v);
       return row;
     }
@@ -929,6 +999,35 @@
         document.getElementById('net-bar-up').style.background = 'linear-gradient(90deg, #22c55e, #16a34a)';
       });
 
+      reqJSON('/api/system/temperatures', function(data) {
+        var el = document.getElementById('temperatures');
+        el.innerHTML = '';
+        if (data && data.length) {
+          for (var i = 0; i < data.length; i++) {
+            var sensor = data[i];
+            var card = document.createElement('div');
+            card.className = 'mini';
+
+            var label = document.createElement('div');
+            label.className = 'k';
+            label.textContent = sensor.label || sensor.source || ('Sensor ' + (i + 1));
+
+            var value = document.createElement('div');
+            value.className = 'v';
+            value.textContent = (sensor.value_c != null ? sensor.value_c.toFixed(1) : '--') + ' °C';
+
+            var note = document.createElement('div');
+            note.className = 'quick-meta';
+            note.textContent = sensor.source || sensor.kind || '';
+
+            card.appendChild(label);
+            card.appendChild(value);
+            card.appendChild(note);
+            el.appendChild(card);
+          }
+        }
+      });
+
       reqJSON('/api/system/top_cpu', function(data) {
         var el = document.getElementById('top-cpu');
         el.innerHTML = '';
@@ -950,8 +1049,22 @@
         el.innerHTML = '';
         if (data && data.length) {
           for (var i = 0; i < Math.min(data.length, 5); i++) {
-            var kbps = Math.round(data[i].speed / 1024);
-            el.appendChild(procRow(data[i].name, kbps, ' KB/s'));
+            var item = data[i];
+            var val = '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0);
+            el.appendChild(procRow(item.name, val, ' Mbps'));
+          }
+        }
+      });
+
+      reqJSON('/api/system/top_bandwidth', function(data) {
+        var el = document.getElementById('bandwidth-procs');
+        el.innerHTML = '';
+        if (data && data.length) {
+          for (var i = 0; i < Math.min(data.length, 5); i++) {
+            var item = data[i];
+            var val = '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0);
+            var meta = 'PID ' + (item.pid || '--') + ' · ' + ((item.connections || 0) === 1 ? '1 connection' : (item.connections || 0) + ' connections');
+            el.appendChild(procRow(item.command || item.name, val, ' Mbps', { meta: meta, wrapName: true }));
           }
         }
       });

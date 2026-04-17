@@ -12,6 +12,12 @@ function readFile(f) {
   try { return fs.readFileSync(f, 'utf8'); } catch { return ''; }
 }
 function readFileLines(f) { return readFile(f).split('\n'); }
+function readNumber(f) {
+  const raw = readFile(f).trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
 
 function getCPU() {
   const prev = global._cpuPrev;
@@ -82,7 +88,7 @@ function getMem() {
 function getGPU() {
   // Try NVIDIA first
   try {
-    const out = execSync('nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.used,memory.total,temperature.gpu,name --format=csv,noheader,nounits', {timeout:3000});
+    const out = execSync('command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.used,memory.total,temperature.gpu,name --format=csv,noheader,nounits 2>/dev/null', {timeout:3000});
     const p = out.toString().trim().split(',').map(s=>s.trim());
     return {
       name: p[5]||'NVIDIA GPU',
@@ -188,25 +194,206 @@ function getTopMem() {
 }
 
 function getTopNet() {
-  // Use /proc/net/dev per interface, combine with process I/O from /proc/PID/io
   try {
-    const procs = execSync('ls /proc/ | grep "^[[:digit:]]"', {timeout:2000}).toString().trim().split('\n').slice(0,50);
+    const now = Date.now();
+    const prev = global._netTopPrev || null;
+    const current = {};
     const results = [];
-    for (const pid of procs) {
-      try {
-        const io = readFile(`/proc/${pid}/io`).trim().split('\n');
-        let rChar=0, wChar=0;
-        for (const l of io) {
-          if (l.startsWith('read_bytes:')) rChar = parseInt(l.split(':')[1])||0;
-          if (l.startsWith('write_bytes:')) wChar = parseInt(l.split(':')[1])||0;
-        }
-        const cmd = readFile(`/proc/${pid}/comm`).trim();
-        results.push({ name: cmd, speed: rChar+wChar, pid });
-      } catch {}
+    const lines = readFileLines('/proc/net/dev').slice(2);
+
+    for (const line of lines) {
+      const match = line.match(/^\s*([^:]+):\s+(\d+)\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+(\d+)/);
+      if (!match) continue;
+      const name = match[1].trim();
+      const rx = parseInt(match[2]) || 0;
+      const tx = parseInt(match[3]) || 0;
+      current[name] = { rx, tx };
+
+      if (prev && prev.samples && prev.samples[name]) {
+        const elapsed = Math.max((now - prev.ts) / 1000, 0.001);
+        const dRx = rx - prev.samples[name].rx;
+        const dTx = tx - prev.samples[name].tx;
+        const totalBps = Math.max(0, dRx + dTx) / elapsed;
+        const rxMbps = Math.max(0, dRx) * 8 / 1e6 / elapsed;
+        const txMbps = Math.max(0, dTx) * 8 / 1e6 / elapsed;
+        results.push({
+          name,
+          rx_mbps: rxMbps,
+          tx_mbps: txMbps,
+          speed: totalBps,
+        });
+      }
     }
-    results.sort((a,b)=>b.speed-a.speed);
-    return results.slice(0,5);
-  } catch { return []; }
+
+    global._netTopPrev = { ts: now, samples: current };
+    results.sort((a, b) => (b.rx_mbps + b.tx_mbps) - (a.rx_mbps + a.tx_mbps));
+    return results.slice(0, 5);
+  } catch {
+    return [];
+  }
+}
+
+function getTemperatures() {
+  const sensors = [];
+  const seen = new Set();
+  const add = (entry) => {
+    if (entry.value_c === null || Number.isNaN(entry.value_c)) return;
+    const key = `${entry.kind}:${entry.id}:${entry.label}:${entry.value_c}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    sensors.push(entry);
+  };
+
+  try {
+    for (const zone of fs.readdirSync('/sys/class/thermal')) {
+      if (!zone.startsWith('thermal_zone')) continue;
+      const base = `/sys/class/thermal/${zone}`;
+      const type = readFile(`${base}/type`).trim();
+      const temp = readNumber(`${base}/temp`);
+      add({
+        kind: 'thermal',
+        id: zone,
+        label: type || zone,
+        source: `thermal/${zone}`,
+        value_c: temp === null ? null : temp / 1000,
+      });
+    }
+  } catch {}
+
+  try {
+    for (const hwmon of fs.readdirSync('/sys/class/hwmon')) {
+      if (!hwmon.startsWith('hwmon')) continue;
+      const base = `/sys/class/hwmon/${hwmon}`;
+      const chip = readFile(`${base}/name`).trim() || hwmon;
+      for (const file of fs.readdirSync(base)) {
+        const match = file.match(/^(temp\d+)_input$/);
+        if (!match) continue;
+        const idx = match[1];
+        const temp = readNumber(`${base}/${file}`);
+        const label = readFile(`${base}/${idx}_label`).trim() || `${chip} ${idx}`;
+        add({
+          kind: 'hwmon',
+          id: `${hwmon}:${idx}`,
+          label,
+          source: `${chip}/${idx}`,
+          value_c: temp === null ? null : temp / 1000,
+        });
+      }
+    }
+  } catch {}
+
+  sensors.sort((a, b) => {
+    if (b.value_c !== a.value_c) return b.value_c - a.value_c;
+    return a.label.localeCompare(b.label);
+  });
+  return sensors;
+}
+
+function getProcessCommand(pid, fallback) {
+  const cmdline = readFile(`/proc/${pid}/cmdline`).split('\0').find(Boolean);
+  if (cmdline) return cmdline;
+  try {
+    const exe = fs.readlinkSync(`/proc/${pid}/exe`);
+    if (exe) return exe;
+  } catch {}
+  return fallback || `pid ${pid}`;
+}
+
+function getTopBandwidthProcesses() {
+  try {
+    const now = Date.now();
+    const prev = global._bandwidthProcPrev || null;
+    const snapshot = {};
+    const grouped = new Map();
+    const results = [];
+    const lines = execSync('ss -tinpeoH state established', { timeout: 3000 })
+      .toString()
+      .split('\n');
+
+    let current = null;
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      if (!line) continue;
+
+      if (/^\s/.test(rawLine)) {
+        if (!current) continue;
+        const stats = line.match(/bytes_sent:(\d+).*bytes_received:(\d+)/);
+        if (!stats) {
+          current = null;
+          continue;
+        }
+
+        const sent = parseInt(stats[1]) || 0;
+        const recv = parseInt(stats[2]) || 0;
+        const existing = grouped.get(current.key) || {
+          name: current.command,
+          short_name: current.name,
+          command: current.command,
+          pid: current.pid,
+          connections: 0,
+          sent: 0,
+          recv: 0,
+        };
+        existing.sent += sent;
+        existing.recv += recv;
+        existing.connections += 1;
+        grouped.set(current.key, existing);
+        current = null;
+        continue;
+      }
+
+      const parts = line.split(/\s+/);
+      if (parts.length < 4) continue;
+      const userMatch = line.match(/users:\(\("([^"]+)",pid=(\d+),fd=\d+\)\)/);
+      if (!userMatch) continue;
+
+      const name = userMatch[1];
+      const pid = parseInt(userMatch[2]) || 0;
+      const command = getProcessCommand(pid, name);
+      current = {
+        name,
+        command,
+        pid,
+        key: `${pid}|${command}`,
+      };
+    }
+
+    for (const [key, sample] of grouped.entries()) {
+      snapshot[key] = {
+        sent: sample.sent,
+        recv: sample.recv,
+        pid: sample.pid,
+        connections: sample.connections,
+        name: sample.name,
+        command: sample.command,
+      };
+
+      if (prev && prev.samples && prev.samples[key]) {
+        const elapsed = Math.max((now - prev.ts) / 1000, 0.001);
+        const prevSample = prev.samples[key];
+        const dSent = Math.max(0, sample.sent - prevSample.sent);
+        const dRecv = Math.max(0, sample.recv - prevSample.recv);
+        const txMbps = (dSent * 8) / 1e6 / elapsed;
+        const rxMbps = (dRecv * 8) / 1e6 / elapsed;
+        if ((rxMbps + txMbps) <= 0) continue;
+        results.push({
+          name: sample.name,
+          command: sample.command,
+          pid: sample.pid,
+          connections: sample.connections,
+          rx_mbps: rxMbps,
+          tx_mbps: txMbps,
+          total_mbps: rxMbps + txMbps,
+        });
+      }
+    }
+
+    global._bandwidthProcPrev = { ts: now, samples: snapshot };
+    results.sort((a, b) => b.total_mbps - a.total_mbps);
+    return results.slice(0, 5);
+  } catch {
+    return [];
+  }
 }
 
 function getUptime() {
@@ -311,9 +498,11 @@ const routes = {
   '/api/system/gpu': () => JSON.stringify(getGPU()),
   '/api/system/intel_gpu': () => JSON.stringify(getIntelGPU()),
   '/api/system/network': () => JSON.stringify(getNetwork()),
+  '/api/system/temperatures': () => JSON.stringify(getTemperatures()),
   '/api/system/top_cpu': () => JSON.stringify(getTopCPU()),
   '/api/system/top_mem': () => JSON.stringify(getTopMem()),
   '/api/system/top_net': () => JSON.stringify(getTopNet()),
+  '/api/system/top_bandwidth': () => JSON.stringify(getTopBandwidthProcesses()),
   '/api/system/uptime': () => getUptime(),
   '/api/system/loadavg': () => getLoadavg(),
   '/api/system/power': () => JSON.stringify(getPower()),
@@ -354,6 +543,7 @@ const server = http.createServer((req, res) => {
       mem: getMem(),
       gpu: getGPU(),
       network: getNetwork(),
+      temperatures: getTemperatures(),
       top_cpu: getTopCPU(),
       top_mem: getTopMem(),
       top_net: getTopNet(),
