@@ -43,7 +43,7 @@ jobs:
             archive_ext: zip
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -99,10 +99,51 @@ jobs:
           if-no-files-found: ignore
 
   publish:
-    name: publish-main-release
+    name: publish-versioned-release
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Derive release metadata from Cargo.toml
+        id: meta
+        shell: bash
+        run: |
+          cargo_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n1)
+
+          if [ -z "$cargo_version" ]; then
+            echo "Failed to parse package version from Cargo.toml"
+            exit 1
+          fi
+
+          tag="v${cargo_version}"
+          echo "release_tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "release_name=System Monitor Web - $tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push version tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          git fetch --tags origin
+
+          if git rev-parse "$RELEASE_TAG" >/dev/null 2>&1; then
+            existing_sha=$(git rev-list -n 1 "$RELEASE_TAG")
+            if [ "$existing_sha" != "$RELEASE_SHA" ]; then
+              echo "Tag '$RELEASE_TAG' already exists on $existing_sha, not current commit $RELEASE_SHA."
+              echo "Bump Cargo.toml version before merging to main."
+              exit 1
+            fi
+            echo "Tag '$RELEASE_TAG' already exists on current commit; continuing."
+          else
+            git tag "$RELEASE_TAG" "$RELEASE_SHA"
+            git push origin "$RELEASE_TAG"
+          fi
+
       - name: Download all built artifacts
         uses: actions/download-artifact@v4
         with:
@@ -110,13 +151,12 @@ jobs:
           merge-multiple: true
           path: dist
 
-      - name: Publish rolling release for main
+      - name: Publish versioned release
         uses: ncipollo/release-action@v1
         with:
-          tag: main-latest
-          name: main-latest
+          tag: ${{ steps.meta.outputs.release_tag }}
+          name: ${{ steps.meta.outputs.release_name }}
           allowUpdates: true
           replacesArtifacts: true
-          makeLatest: true
           artifacts: "dist/*"
           generateReleaseNotes: true

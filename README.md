@@ -67,7 +67,10 @@ This repo also ships Rust-native CI and release workflows:
   - Runs on every pull request and push to `main`
 
 - `.github/workflows/release.yml`
-  - Builds release binaries on push to `main` for:
+  - Triggers on pushes to `main`
+  - Reads `Cargo.toml` version and creates/pushes tag `vX.Y.Z` automatically (for example: `version = "0.1.0"` -> tag `v0.1.0`)
+  - Fails if that version tag already exists on a different commit (to prevent accidental retagging)
+  - Builds release binaries for:
     - `x86_64-unknown-linux-gnu`
     - `aarch64-unknown-linux-gnu`
     - `riscv64gc-unknown-linux-gnu`
@@ -75,4 +78,4 @@ This repo also ships Rust-native CI and release workflows:
     - `aarch64-apple-darwin`
     - `x86_64-pc-windows-msvc`
     - `aarch64-pc-windows-msvc`
-  - Publishes/updates a rolling GitHub Release tag: `main-latest`
+  - Publishes/updates a GitHub Release named `System Monitor Web - vX.Y.Z`
