@@ -638,7 +638,7 @@
         </div>
         <div class="quick-card">
           <div class="quick-label">GPU</div>
-          <div class="quick-value" id="gpu-freq">--<span class="metric-unit">MHz</span></div>
+          <div class="quick-value" id="gpu-freq">--<span class="metric-unit">%</span></div>
           <div class="quick-meta" id="gpu-util-label">--</div>
         </div>
         <div class="quick-card">
@@ -747,11 +747,11 @@
 
           <div class="gpu-chip">
             <div class="mini">
-              <div class="k">Clock / load</div>
+              <div class="k">Utilization</div>
               <div class="v" id="gpu-freq-2">--</div>
             </div>
             <div class="mini">
-              <div class="k">Activity</div>
+              <div class="k">Frequency</div>
               <div class="v" id="gpu-util-label-2">--</div>
             </div>
           </div>
@@ -959,6 +959,30 @@
       return String(label).replace(/[_-]+/g, ' ').replace(/\b\w/g, function(ch) { return ch.toUpperCase(); });
     }
 
+    function formatGpuPercent(value) {
+      if (value === undefined || value === null || isNaN(value)) return '--';
+      return Math.round(value) + '%';
+    }
+
+    function formatGpuFrequency(data) {
+      if (!data) return '--';
+      var liveFreq = data.actFreq || data.freq || 0;
+      var maxFreq = data.maxFreq || 0;
+      if (liveFreq > 0 && maxFreq > 0) return liveFreq + ' / ' + maxFreq + ' MHz';
+      if (liveFreq > 0) return liveFreq + ' MHz';
+      if (maxFreq > 0) return '-- / ' + maxFreq + ' MHz';
+      return '--';
+    }
+
+    function formatGpuActivityMeta(data) {
+      if (!data) return '--';
+      if (data.activity_source === 'rc6-residency') return 'Actual activity via RC6 idle residency';
+      if (data.activity_source === 'vendor-utilization') return 'Actual vendor-reported utilization';
+      if (data.activity_source === 'gpu_busy_percent') return 'Actual driver-reported busy percent';
+      if (data.activity_source === 'frequency-fallback') return 'Estimated from graphics clock range';
+      return data.activity_detail || '--';
+    }
+
     function procRow(name, val, unit, opts) {
       opts = opts || {};
       var row = document.createElement('div');
@@ -1071,32 +1095,22 @@
         setText('swap-bar-label', fmt(swapPct) + '%');
       });
 
-      reqJSON('/api/system/intel_gpu', function(data) {
-        if (data && data.name) {
-          setHTML('gpu-freq', (data.freq || '--') + '<span class="metric-unit">MHz</span>');
-          setText('gpu-freq-2', (data.freq || '--') + ' / ' + (data.maxFreq || '--') + ' MHz');
-          setText('gpu-model', data.name);
-          var pct = data.maxFreq > 0 ? Math.round((data.freq / data.maxFreq) * 100) : 0;
-          var label = (data.freq || '--') + ' / ' + (data.maxFreq || '--') + ' MHz';
-          setText('gpu-util-label', label);
-          setText('gpu-util-label-2', label);
-          setText('gpu-bar-value', pct + '%');
-          document.getElementById('gpu-bar').style.width = pct + '%';
-          document.getElementById('gpu-bar').style.background = colorBar(pct);
-        } else {
-          reqJSON('/api/system/gpu', function(gpu) {
-            if (gpu && gpu.name) {
-              setHTML('gpu-freq', (gpu.utilization || '--') + '<span class="metric-unit">%</span>');
-              setText('gpu-freq-2', (gpu.utilization || '--') + '% active');
-              setText('gpu-model', gpu.name);
-              setText('gpu-util-label', gpu.name);
-              setText('gpu-util-label-2', gpu.name);
-              setText('gpu-bar-value', (gpu.utilization || 0) + '%');
-              document.getElementById('gpu-bar').style.width = (gpu.utilization || 0) + '%';
-              document.getElementById('gpu-bar').style.background = colorBar(gpu.utilization || 0);
-            }
-          });
-        }
+      reqJSON('/api/system/gpu', function(gpu) {
+        if (!gpu || !gpu.name) return;
+
+        var pct = Math.max(0, Math.min(100, Number(gpu.utilization) || 0));
+        var pctLabel = formatGpuPercent(pct);
+        var freqLabel = formatGpuFrequency(gpu);
+        var activityMeta = formatGpuActivityMeta(gpu);
+
+        setHTML('gpu-freq', pctLabel.replace('%', '') + '<span class="metric-unit">%</span>');
+        setText('gpu-freq-2', pctLabel + ' active');
+        setText('gpu-model', gpu.name);
+        setText('gpu-util-label', activityMeta);
+        setText('gpu-util-label-2', freqLabel);
+        setText('gpu-bar-value', pctLabel);
+        document.getElementById('gpu-bar').style.width = pct + '%';
+        document.getElementById('gpu-bar').style.background = colorBar(pct);
       });
 
       reqJSON('/api/system/network', function(data) {

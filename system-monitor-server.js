@@ -19,6 +19,57 @@ function readNumber(f) {
   return Number.isFinite(n) ? n : null;
 }
 
+function clampPercent(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, value));
+}
+
+function deriveGpuActivityMetric(sample) {
+  const elapsedMs = Number(sample?.elapsedMs) || 0;
+  const rc6DeltaMs = sample?.rc6DeltaMs;
+  const minFreq = Number(sample?.minFreq) || 0;
+  const maxFreq = Number(sample?.maxFreq) || 0;
+  const actFreq = Number(sample?.actFreq ?? sample?.freq) || 0;
+
+  if (Number.isFinite(rc6DeltaMs) && elapsedMs > 0) {
+    const idleMs = Math.max(0, Math.min(elapsedMs, rc6DeltaMs));
+    const activeMs = Math.max(0, elapsedMs - idleMs);
+    return {
+      utilization: Math.round(clampPercent((activeMs * 100) / elapsedMs)),
+      source: 'rc6-residency',
+      detail: 'Actual active time from RC6 idle residency',
+    };
+  }
+
+  const freqRange = maxFreq - minFreq;
+  if (freqRange > 0 && actFreq > 0) {
+    return {
+      utilization: Math.round(clampPercent(((actFreq - minFreq) * 100) / freqRange)),
+      source: 'frequency-fallback',
+      detail: 'Estimated from graphics clock range',
+    };
+  }
+
+  return {
+    utilization: 0,
+    source: 'unavailable',
+    detail: 'Usage telemetry unavailable',
+  };
+}
+
+function findIntelGpuCardPath() {
+  try {
+    for (const entry of fs.readdirSync('/sys/class/drm')) {
+      if (!/^card\d+$/.test(entry)) continue;
+      const base = `/sys/class/drm/${entry}`;
+      const vendor = readFile(`${base}/device/vendor`).trim().toLowerCase();
+      const klass = readFile(`${base}/device/class`).trim().toLowerCase();
+      if (vendor === '0x8086' && klass.startsWith('0x03')) return base;
+    }
+  } catch {}
+  return null;
+}
+
 function getCPU() {
   const prev = global._cpuPrev;
   const curr = parseCPUstat(readFileLines('/proc/stat'));
@@ -96,7 +147,9 @@ function getGPU() {
       memory: parseFloat(p[1])||0,
       memUsed: parseInt(p[2])||0,
       memTotal: parseInt(p[3])||1,
-      temp: parseInt(p[4])||0
+      temp: parseInt(p[4])||0,
+      activity_source: 'vendor-utilization',
+      activity_detail: 'Actual GPU utilization from nvidia-smi',
     };
   } catch {}
   // Try AMD
@@ -104,52 +157,59 @@ function getGPU() {
     const out = execSync('cat /sys/class/drm/card0/device/gpu_busy_percent 2>/dev/null', {timeout:2000});
     const util = parseInt(out.toString().trim())||0;
     const temp = parseInt(readFile('/sys/class/drm/card0/device/hwmon/hwmon1/temp1_input')||'0')/1000||0;
-    return { name: 'AMD GPU', utilization: util, memory: 0, temp };
+    return {
+      name: 'AMD GPU',
+      utilization: util,
+      memory: 0,
+      temp,
+      activity_source: 'gpu_busy_percent',
+      activity_detail: 'Actual GPU busy percent from amdgpu sysfs',
+    };
   } catch {}
   // Fallback: Intel via dedicated intel_gpu endpoint
   return getIntelGPU();
 }
 
-function getIntelGPU() {
-  // Intel Iris Xe — read from sysfs (no root needed for frequency/RC6)
+function getIntelGPU(now = Date.now()) {
+  const cardPath = findIntelGpuCardPath();
+  if (!cardPath) return null;
+
+  const gtPath = `${cardPath}/gt/gt0`;
   const gpu = {
     name: 'Intel Iris Xe Graphics',
     utilization: 0,
     memory: 0,
     temp: 0,
     freq: 0,
-    maxFreq: 1300
+    actFreq: 0,
+    minFreq: 0,
+    maxFreq: 0,
+    activity_source: 'unavailable',
+    activity_detail: 'Usage telemetry unavailable',
   };
+
   try {
-    const curFreqPath = '/sys/class/drm/card1/gt/gt0/rps_cur_freq_mhz';
-    const maxFreqPath = '/sys/class/drm/card1/gt/gt0/rps_max_freq_mhz';
-    const minFreqPath = '/sys/class/drm/card1/gt/gt0/rps_min_freq_mhz';
-    const actFreqPath = '/sys/class/drm/card1/gt/gt0/act_freq_mhz';
-    const rc6Path = '/sys/class/drm/card1/gt/gt0/rc6_residency_ms';
+    const curFreq = readNumber(`${gtPath}/rps_cur_freq_mhz`) ?? 0;
+    const maxFreq = readNumber(`${gtPath}/rps_max_freq_mhz`) ?? 0;
+    const minFreq = readNumber(`${gtPath}/rps_min_freq_mhz`) ?? 0;
+    const actFreq = readNumber(`${gtPath}/rps_act_freq_mhz`) ?? curFreq;
+    const rc6Now = readNumber(`${gtPath}/rc6_residency_ms`);
 
-    const curFreq = parseInt(readFile(curFreqPath)) || 0;
-    const maxFreq = parseInt(readFile(maxFreqPath)) || 1300;
-    const minFreq = parseInt(readFile(minFreqPath)) || 400;
-    const actFreq = parseInt(readFile(actFreqPath)) || 0;
-    const rc6Now = parseInt(readFile(rc6Path)) || 0;
+    const prevMap = global._gpuPrev || (global._gpuPrev = {});
+    const prev = prevMap[cardPath] || null;
+    const elapsedMs = prev ? Math.max(now - prev.t, 0) : 0;
+    const rc6DeltaMs = prev && rc6Now !== null && prev.rc6 !== null ? Math.max(0, rc6Now - prev.rc6) : null;
+    const activity = deriveGpuActivityMetric({ elapsedMs, rc6DeltaMs, minFreq, maxFreq, actFreq, freq: curFreq });
 
-    if (!global._gpuPrev) global._gpuPrev = { rc6: rc6Now, t: Date.now() };
-    const prev = global._gpuPrev;
-    const dt = (Date.now() - prev.t) / 1000;
-    const rc6Delta = rc6Now - prev.rc6;
-    prev.rc6 = rc6Now; prev.t = Date.now();
+    prevMap[cardPath] = { rc6: rc6Now, t: now };
 
-    // Frequency-based utilization: how high is the GPU clock relative to its range?
-    const freqRange = maxFreq - minFreq;
-    const freqPct = freqRange > 0 ? Math.min(100, ((curFreq - minFreq) * 100) / freqRange) : 0;
-    // RC6 inverse: if RC6 delta ~= dt*1000, GPU was fully idle
-    const idlePct = dt > 0 ? Math.min(100, (rc6Delta / (dt * 1000)) * 100) : 0;
-    // Blend: 60% frequency signal, 40% inverse-RC6
-    gpu.utilization = Math.round(freqPct * 0.6 + Math.max(0, 100 - idlePct) * 0.4);
-    gpu.utilization = Math.max(0, Math.min(100, gpu.utilization));
+    gpu.utilization = activity.utilization;
+    gpu.activity_source = activity.source;
+    gpu.activity_detail = activity.detail;
     gpu.freq = curFreq;
-    gpu.maxFreq = maxFreq;
     gpu.actFreq = actFreq;
+    gpu.minFreq = minFreq;
+    gpu.maxFreq = maxFreq;
   } catch(e) {
     // Not an Intel GPU or path doesn't exist
     return null;
@@ -575,7 +635,17 @@ const server = http.createServer((req, res) => {
   res.writeHead(404); res.end('Not found');
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`System Monitor: http://localhost:${PORT}`);
-  console.log(`Serving: ${HTML}`);
-});
+if (require.main === module) {
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`System Monitor: http://localhost:${PORT}`);
+    console.log(`Serving: ${HTML}`);
+  });
+}
+
+module.exports = {
+  deriveGpuActivityMetric,
+  findIntelGpuCardPath,
+  getIntelGPU,
+  getGPU,
+  server,
+};
