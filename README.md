@@ -3,12 +3,14 @@
 A lightweight self-hosted system monitor web UI with a modern mobile-friendly dashboard.
 
 ## Files
-- `system-monitor.html` - frontend dashboard
-- `system-monitor-server.js` - tiny Node.js server and data API
+- `system-monitor.html` - embedded frontend dashboard (served from Rust binary)
+- `src/main.rs` - Rust server entrypoint
+- `src/lib.rs` - API handlers + telemetry collectors
+- `src/model.rs` - JSON models
 
 ## Run locally
 ```bash
-node system-monitor-server.js
+cargo run --release
 ```
 
 Then open <http://localhost:8765>.
@@ -54,3 +56,21 @@ This repo includes a GitHub Actions workflow that builds and publishes a multi-a
 - `linux/arm64`
 
 It publishes on pushes to `main`, tags, and manual workflow dispatch.
+
+## Rust CI and release binaries
+This repo also ships Rust-native CI and release workflows:
+
+- `.github/workflows/rust-ci.yml`
+  - `cargo fmt --all -- --check`
+  - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+  - `cargo test --workspace --all-features --locked`
+  - Runs on every pull request and push to `main`
+
+- `.github/workflows/release.yml`
+  - Builds release binaries on push to `main` for:
+    - `x86_64-unknown-linux-gnu`
+    - `aarch64-unknown-linux-gnu`
+    - `x86_64-apple-darwin`
+    - `aarch64-apple-darwin`
+    - `x86_64-pc-windows-msvc`
+  - Publishes/updates a rolling GitHub Release tag: `main-latest`
