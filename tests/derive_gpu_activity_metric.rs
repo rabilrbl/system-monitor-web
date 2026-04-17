@@ -20,3 +20,10 @@ fn falls_back_to_frequency_when_rc6_unavailable() {
     assert_eq!(result.utilization, 50);
     assert_eq!(result.source, "frequency-fallback");
 }
+
+#[test]
+fn reports_unavailable_when_rc6_and_frequency_signals_are_missing() {
+    let result = derive_gpu_activity_metric(0.0, None, 1000.0, 1000.0, 0.0);
+    assert_eq!(result.utilization, 0);
+    assert_eq!(result.source, "unavailable");
+}

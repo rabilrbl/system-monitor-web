@@ -1,38 +1,20 @@
-name: Release binaries
+name: release-binaries
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 env:
+  CARGO_TERM_COLOR: always
   BINARY_NAME: system-monitor-web
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.meta.outputs.tag }}
-      release_name: ${{ steps.meta.outputs.release_name }}
-
-    steps:
-      - id: meta
-        name: Compute release metadata
-        shell: bash
-        run: |
-          timestamp="$(date -u +'%Y%m%d-%H%M%S')"
-          short_sha="${GITHUB_SHA::7}"
-          tag="main-${timestamp}-${short_sha}"
-          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
-          echo "release_name=Main build ${tag}" >> "$GITHUB_OUTPUT"
-
   build:
-    needs: prepare
-    name: Build ${{ matrix.target }}
+    name: build-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -40,92 +22,86 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            binary_ext: ""
+            archive_ext: tar.gz
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            binary_ext: ""
-          - os: ubuntu-latest
-            target: riscv64gc-unknown-linux-gnu
-            binary_ext: ""
-          - os: macos-13
+            archive_ext: tar.gz
+          - os: macos-latest
             target: x86_64-apple-darwin
-            binary_ext: ""
-          - os: macos-14
+            archive_ext: tar.gz
+          - os: macos-latest
             target: aarch64-apple-darwin
-            binary_ext: ""
+            archive_ext: tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            binary_ext: ".exe"
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
-            binary_ext: ".exe"
+            archive_ext: zip
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Cache Cargo artifacts
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install Linux ARM64 linker
+      - name: Install Linux cross linker for aarch64
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
 
-      - name: Install Linux RISC-V linker
-        if: matrix.target == 'riscv64gc-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-riscv64-linux-gnu
-
       - name: Build release binary
         shell: bash
-        run: |
-          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
-            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
-          fi
-          if [[ "${{ matrix.target }}" == "riscv64gc-unknown-linux-gnu" ]]; then
-            export CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER=riscv64-linux-gnu-gcc
-          fi
-          cargo build --release --locked --target "${{ matrix.target }}"
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: cargo build --release --locked --target "${{ matrix.target }}"
 
-      - name: Stage artifact
+      - name: Package (unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
-          mkdir -p dist
-          cp "target/${{ matrix.target }}/release/${BINARY_NAME}${{ matrix.binary_ext }}" \
-             "dist/${BINARY_NAME}-${{ matrix.target }}${{ matrix.binary_ext }}"
+          pkg="${BINARY_NAME}-${{ matrix.target }}"
+          mkdir -p "$pkg"
+          cp "target/${{ matrix.target }}/release/${BINARY_NAME}" "$pkg/"
+          tar -czf "$pkg.tar.gz" "$pkg"
 
-      - name: Upload artifact
+      - name: Package (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pkg = "${env:BINARY_NAME}-${{ matrix.target }}"
+          New-Item -ItemType Directory -Path $pkg | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/${env:BINARY_NAME}.exe" "$pkg/"
+          Compress-Archive -Path $pkg -DestinationPath "$pkg.zip"
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}
-          path: dist/*
+          name: binaries-${{ matrix.target }}
+          path: |
+            ${{ env.BINARY_NAME }}-${{ matrix.target }}.tar.gz
+            ${{ env.BINARY_NAME }}-${{ matrix.target }}.zip
+          if-no-files-found: ignore
 
-  release:
-    needs:
-      - prepare
-      - build
+  publish:
+    name: publish-main-release
+    needs: build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Download built artifacts
+      - name: Download all built artifacts
         uses: actions/download-artifact@v4
         with:
-          path: release-assets
+          pattern: binaries-*
           merge-multiple: true
+          path: dist
 
-      - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
+      - name: Publish rolling release for main
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ needs.prepare.outputs.tag }}
-          name: ${{ needs.prepare.outputs.release_name }}
-          target_commitish: ${{ github.sha }}
-          generate_release_notes: true
-          files: release-assets/*
+          tag: main-latest
+          name: main-latest
+          allowUpdates: true
+          replacesArtifacts: true
+          makeLatest: true
+          artifacts: "dist/*"
+          generateReleaseNotes: true

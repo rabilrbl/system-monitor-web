@@ -1199,3 +1199,84 @@ fn get_top_bandwidth_processes(ctx: &Arc<AppContext>) -> Vec<TopBandwidthProcess
     result.truncate(5);
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn clamp_percent_handles_nan_and_bounds() {
+        assert_eq!(clamp_percent(f64::NAN), 0.0);
+        assert_eq!(clamp_percent(-10.0), 0.0);
+        assert_eq!(clamp_percent(42.5), 42.5);
+        assert_eq!(clamp_percent(150.0), 100.0);
+    }
+
+    #[test]
+    fn parse_cpu_total_from_stat_parses_cpu_line() {
+        let sample = "cpu  100 5 20 200 10 0 0 0 0 0\ncpu0 10 1 2 20 1 0 0 0 0 0\n";
+        let parsed = parse_cpu_total_from_stat(sample).expect("cpu line should parse");
+
+        assert_eq!(parsed.user, 100);
+        assert_eq!(parsed.nice, 5);
+        assert_eq!(parsed.system, 20);
+        assert_eq!(parsed.idle, 200);
+        assert_eq!(parsed.iowait, 10);
+    }
+
+    #[test]
+    fn parse_cpu_total_from_stat_returns_none_without_cpu_line() {
+        let sample = "intr 1\nctxt 2\n";
+        assert!(parse_cpu_total_from_stat(sample).is_none());
+    }
+
+    #[test]
+    fn parse_core_times_from_stat_parses_per_core_entries() {
+        let sample =
+            "cpu  1 2 3 4 5 0 0 0 0 0\ncpu0 10 20 30 40 50 0 0 0 0 0\ncpu1 3 4 5 6 7 0 0 0 0 0\n";
+
+        let parsed = parse_core_times_from_stat(sample);
+        assert_eq!(parsed.len(), 2);
+        assert!(parsed.contains_key("cpu0"));
+        assert!(parsed.contains_key("cpu1"));
+
+        let cpu0 = parsed.get("cpu0").expect("cpu0 must exist");
+        assert_eq!(cpu0.user, 10);
+        assert_eq!(cpu0.nice, 20);
+        assert_eq!(cpu0.system, 30);
+        assert_eq!(cpu0.idle, 40);
+        assert_eq!(cpu0.iowait, 50);
+    }
+
+    #[test]
+    fn parse_net_dev_totals_accumulates_rx_tx() {
+        let sample = "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n  lo: 100 0 0 0 0 0 0 0 100 0 0 0 0 0 0 0\neth0: 200 0 0 0 0 0 0 0 300 0 0 0 0 0 0 0\n";
+
+        let (rx, tx) = parse_net_dev_totals(sample);
+        assert_eq!(rx, 300);
+        assert_eq!(tx, 400);
+    }
+
+    #[test]
+    fn parse_net_dev_interfaces_returns_per_interface_map() {
+        let sample = "Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\n wlan0: 200 0 0 0 0 0 0 0 300 0 0 0 0 0 0 0\n  lo: 50 0 0 0 0 0 0 0 60 0 0 0 0 0 0 0\n";
+
+        let parsed = parse_net_dev_interfaces(sample);
+        assert_eq!(parsed.len(), 2);
+        assert_eq!(parsed.get("wlan0"), Some(&(200, 300)));
+        assert_eq!(parsed.get("lo"), Some(&(50, 60)));
+    }
+
+    #[test]
+    fn first_existing_hwmon_temp_returns_zero_for_missing_base() {
+        assert_eq!(first_existing_hwmon_temp("/definitely/missing/hwmon"), 0.0);
+    }
+
+    #[test]
+    fn get_process_command_falls_back_for_invalid_pid() {
+        assert_eq!(
+            get_process_command(-1, "fallback-binary"),
+            "fallback-binary"
+        );
+    }
+}
