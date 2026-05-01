@@ -1,0 +1,28 @@
+[Unit]
+Description=System Monitor Web
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/system-monitor-web
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+# Ensure ss and other system tools are on PATH
+Environment=\"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/bin:/sbin\"
+
+# Security hardening (known compatible with ss socket owner enumeration)
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+
+[Install]
+WantedBy=default.target
