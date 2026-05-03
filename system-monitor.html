@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>System Monitor</title>
+  <title>System Monitor Web</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -63,6 +63,41 @@
       margin: 0 auto;
       padding: 18px 14px 34px;
     }
+
+
+    .topbar {
+      position: sticky;
+      top: 8px;
+      z-index: 20;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      background: rgba(7, 17, 31, 0.82);
+      backdrop-filter: blur(12px);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-left,.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .chip{padding:5px 9px;border-radius:999px;border:1px solid var(--panel-border);font-size:.75rem;color:var(--muted);}
+    .refresh-btn{border:1px solid var(--panel-border);background:rgba(56,189,248,.14);color:#bae6fd;border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer;}
+    .refresh-btn:focus-visible{outline:2px solid #38bdf8;outline-offset:2px;}
+    .sparkline{margin-top:8px;height:26px;display:flex;align-items:flex-end;gap:3px;opacity:.9;}
+    .sparkline span{display:block;flex:1;min-width:3px;border-radius:999px;background:rgba(148,163,184,.35);height:20%;transition:height .2s ease, background .2s ease;}
+
+
+    .app-shell{display:grid;grid-template-columns:220px 1fr;gap:14px;}
+    .sidebar{border:1px solid var(--panel-border);border-radius:22px;background:rgba(8,14,28,.92);padding:14px;position:sticky;top:10px;height:calc(100vh - 20px);display:flex;flex-direction:column;}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700;margin-bottom:14px;}
+    .brand-badge{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(56,189,248,.14);color:#38bdf8}
+    .nav-list{display:grid;gap:6px}
+    .nav-item{padding:10px 12px;border-radius:12px;color:#a9b7cc;text-decoration:none;font-weight:600;display:flex;gap:10px;align-items:center}
+    .nav-item.active,.nav-item:hover{background:rgba(56,189,248,.12);color:#7dd3fc}
+    .spacer{flex:1}
+    .mobile-tabs{display:none}
 
     .hero {
       padding: 18px;
@@ -572,11 +607,17 @@
     .error-banner.visible { display: block; }
 
     @media (max-width: 1100px) {
+      .app-shell{grid-template-columns:1fr;}
+      .sidebar{display:none;}
       .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .layout { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 780px) {
+      .mobile-tabs{position:fixed;left:8px;right:8px;bottom:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:25;background:rgba(7,17,31,.92);border:1px solid var(--panel-border);border-radius:14px;padding:8px;}
+      .mobile-tabs a{text-decoration:none;color:var(--muted);font-size:.72rem;text-align:center;}
+      .mobile-tabs a.active{color:#38bdf8;font-weight:700;}
+      body{padding-bottom:84px;}
       .shell { padding: 12px 10px 24px; }
       .hero { padding: 14px; border-radius: 24px; }
       .hero-top { flex-direction: column; align-items: flex-start; }
@@ -612,15 +653,45 @@
 </head>
 <body>
   <main class="shell">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-badge">📈</span>System Monitor Web</div>
+        <nav class="nav-list">
+          <a class="nav-item active" href="#">🏠 Overview</a>
+          <a class="nav-item" href="#">🧠 CPU</a>
+          <a class="nav-item" href="#">💾 Memory</a>
+          <a class="nav-item" href="#">🎮 GPU</a>
+          <a class="nav-item" href="#">🌐 Network</a>
+          <a class="nav-item" href="#">🌡️ Sensors</a>
+          <a class="nav-item" href="#">⚡ Power</a>
+          <a class="nav-item" href="#">📦 Processes</a>
+        </nav>
+        <div class="spacer"></div>
+        <a class="nav-item" href="#">⚙️ System</a>
+      </aside>
+      <div>
+    <header class="topbar">
+      <div class="topbar-left">
+        <strong>System Monitor Web</strong>
+        <span class="chip" id="host-chip">Local host</span>
+        <span class="chip">Linux</span>
+        <span class="chip" id="uptime-chip">Uptime: --</span>
+      </div>
+      <div class="topbar-right">
+        <span class="chip" id="refresh-status">Refresh: live</span>
+        <span class="chip" id="last-updated-chip">Last updated: --</span>
+        <button class="refresh-btn" id="refresh-now" type="button">Refresh now</button>
+      </div>
+    </header>
     <section class="hero">
       <div class="hero-top">
         <div>
           <div class="eyebrow"><span class="pulse"></span> Live system telemetry</div>
-          <h1 class="title">System Monitor</h1>
+          <h1 class="title">System Monitor Web</h1>
           <div class="subtext">A cleaner live view of performance, power, battery, and busiest processes, designed to be readable on mobile first.</div>
         </div>
         <div class="hero-side">
-          <strong id="hostname">Linux</strong>
+          <strong id="hostname">Local host</strong>
           <div id="uptime">Loading uptime...</div>
         </div>
       </div>
@@ -630,31 +701,37 @@
           <div class="quick-label">CPU</div>
           <div class="quick-value"><span id="cpu-pct">--</span>%</div>
           <div class="quick-meta" id="cpu-cores-label">--</div>
+          <div class="sparkline" id="spark-cpu" aria-hidden="true"></div>
         </div>
         <div class="quick-card">
           <div class="quick-label">Memory</div>
           <div class="quick-value"><span id="mem-pct">--</span>%</div>
           <div class="quick-meta" id="mem-info">--</div>
+          <div class="sparkline" id="spark-mem" aria-hidden="true"></div>
         </div>
         <div class="quick-card">
           <div class="quick-label">GPU</div>
           <div class="quick-value" id="gpu-freq">--<span class="metric-unit">%</span></div>
           <div class="quick-meta" id="gpu-util-label">--</div>
+          <div class="sparkline" id="spark-gpu" aria-hidden="true"></div>
         </div>
         <div class="quick-card">
           <div class="quick-label">Battery</div>
           <div class="quick-value"><span id="bat-pct">--</span>%</div>
           <div class="quick-meta" id="bat-status-text">--</div>
+          <div class="sparkline" id="spark-bat" aria-hidden="true"></div>
         </div>
         <div class="quick-card">
           <div class="quick-label">Download</div>
           <div class="quick-value"><span id="net-down">--</span></div>
           <div class="quick-meta" id="net-bar-label-down">--</div>
+          <div class="sparkline" id="spark-net" aria-hidden="true"></div>
         </div>
         <div class="quick-card">
           <div class="quick-label">Package Power</div>
           <div class="quick-value"><span id="power-pkg">--</span>W</div>
           <div class="quick-meta" id="power-bar-label">--</div>
+          <div class="sparkline" id="spark-power" aria-hidden="true"></div>
         </div>
       </div>
 
@@ -854,6 +931,11 @@
     </section>
 
     <div class="footer" id="timestamp">--</div>
+      </div>
+    </div>
+    <nav class="mobile-tabs">
+      <a class="active" href="#">Overview</a><a href="#">CPU</a><a href="#">Memory</a><a href="#">Network</a><a href="#">More</a>
+    </nav>
   </main>
 
   <script>
@@ -871,6 +953,23 @@
     function setHTML(id, value) {
       var el = document.getElementById(id);
       if (el) el.innerHTML = value;
+    }
+
+
+    var sparkState = { cpu: [], mem: [], gpu: [], bat: [], net: [], power: [] };
+
+    function pushSpark(id, value, color) {
+      if (!(id in sparkState)) return;
+      if (value === undefined || value === null || isNaN(value)) return;
+      var arr = sparkState[id];
+      arr.push(Math.max(0, Math.min(100, Number(value))));
+      if (arr.length > 20) arr.shift();
+      var el = document.getElementById('spark-' + id);
+      if (!el) return;
+      el.innerHTML = arr.map(function(v){
+        var h = Math.max(12, Math.round(v));
+        return '<span style="height:' + h + '%;background:' + color + '"></span>';
+      }).join('');
     }
 
     var POLL_INTERVALS = { update: 2000, cores: 3000 };
@@ -1045,6 +1144,7 @@
         if (currCpu) window.prevCpuStat = currCpu;
 
         setText('cpu-pct', fmt(totalCpu));
+        pushSpark('cpu', totalCpu, '#38bdf8');
         setText('cpu-pct-2', fmt(totalCpu));
         setText('cpu-bar-value', fmt(totalCpu) + '%');
         var bar = document.getElementById('cpu-bar');
@@ -1062,7 +1162,10 @@
       req('/api/system/cpu_model', function(text) {
         setText('cpu-model', text.trim());
         var host = text.trim().split(' @ ')[0].split(' CPU')[0];
-        if (host) setText('hostname', host);
+        if (host) {
+          setText('hostname', host);
+          setText('host-chip', host);
+        }
       });
 
       req('/api/system/meminfo', function(text) {
@@ -1085,6 +1188,7 @@
         var swapPct = swapTotal > 0 ? (swapUsed * 100 / swapTotal) : 0;
 
         setText('mem-pct', fmt(memPct));
+        pushSpark('mem', memPct, '#a78bfa');
         setText('mem-info', fmtGB(used) + ' / ' + fmtGB(total));
         setText('mem-info-2', fmtGB(used) + ' / ' + fmtGB(total));
         document.getElementById('mem-bar').style.width = memPct + '%';
@@ -1104,6 +1208,7 @@
         var activityMeta = formatGpuActivityMeta(gpu);
 
         setHTML('gpu-freq', pctLabel.replace('%', '') + '<span class="metric-unit">%</span>');
+        pushSpark('gpu', pct, '#22c55e');
         setText('gpu-freq-2', pctLabel + ' active');
         setText('gpu-model', gpu.name);
         setText('gpu-util-label', activityMeta);
@@ -1118,6 +1223,7 @@
         var rx = data.rx_bytes || 0;
         var tx = data.tx_bytes || 0;
         setText('net-down', fmt(rx / 1e6));
+        pushSpark('net', Math.min(100, (rx / 12.5e6) * 100), '#38bdf8');
         setText('net-down-2', fmt(rx / 1e6));
         setText('net-up', fmt(tx / 1e6));
         var downLabel = fmt((rx * 8) / 1e6) + ' Mbps';
@@ -1206,13 +1312,16 @@
         var days = Math.floor(uptimeSec / 86400);
         var hrs = Math.floor((uptimeSec % 86400) / 3600);
         var mins = Math.floor((uptimeSec % 3600) / 60);
-        setText('uptime', 'Up ' + days + 'd ' + hrs + 'h ' + mins + 'm');
+        var uptimeLabel = 'Up ' + days + 'd ' + hrs + 'h ' + mins + 'm';
+        setText('uptime', uptimeLabel);
+        setText('uptime-chip', 'Uptime: ' + uptimeLabel);
       });
 
       reqJSON('/api/system/power', function(data) {
         if (data) {
           var pkgW = data.package || 0;
           setText('power-pkg', pkgW.toFixed(1));
+          pushSpark('power', Math.min(100, (pkgW / 30) * 100), '#f59e0b');
           setText('power-pkg-2', pkgW.toFixed(1));
           var label = pkgW.toFixed(1) + ' W';
           setText('power-bar-label', label);
@@ -1226,6 +1335,7 @@
         if (data) {
           var pct = data.capacity || 0;
           setText('bat-pct', pct);
+          pushSpark('bat', pct, '#14b8a6');
           setText('bat-pct-2', pct);
           document.getElementById('bat-bar').style.width = pct + '%';
           setText('bat-bar-label', pct + '%');
@@ -1263,6 +1373,7 @@
       var stamp = now.toLocaleString('en-IN', { timeZone: 'Asia/Calcutta' });
       setText('timestamp', 'Last updated · ' + stamp);
       setText('timestamp-inline', stamp.split(', ').slice(-1)[0] || stamp);
+      setText('last-updated-chip', 'Last updated: ' + (stamp.split(', ').slice(-1)[0] || stamp));
     }
 
     function updateCores() {
@@ -1364,6 +1475,12 @@
 
     document.addEventListener('visibilitychange', function() {
       syncPollingState(!document.hidden);
+    });
+    document.getElementById('refresh-now').addEventListener('click', function() {
+      setText('refresh-status', 'Refresh: syncing...');
+      update();
+      updateCores();
+      setTimeout(function() { setText('refresh-status', 'Refresh: live'); }, 500);
     });
     window.addEventListener('focus', function() {
       syncPollingState(true);
