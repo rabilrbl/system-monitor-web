@@ -407,51 +407,39 @@
     }
 
     .cores {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
       gap: 10px;
       margin-top: 16px;
-      align-items: stretch;
-      justify-content: flex-start;
-      min-height: 0;
+      align-items: end;
+      min-height: 158px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(148, 163, 184, 0.08);
     }
 
     .core-item {
-      flex: 1 1 154px;
-      min-width: 142px;
-      max-width: 192px;
-      min-height: 58px;
-      padding: 12px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
+      min-width: 0;
+      min-height: 134px;
+      padding: 8px 6px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
       overflow: hidden;
       position: relative;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
+      justify-content: flex-end;
+      gap: 7px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
-    .core-main {
-      min-width: 0;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .core-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
     .core-label {
-      min-width: 0;
+      max-width: 100%;
       color: var(--muted);
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       font-weight: 700;
@@ -463,23 +451,28 @@
     .core-value {
       flex-shrink: 0;
       color: var(--text);
-      font-size: 0.84rem;
+      font-size: 0.72rem;
       font-weight: 700;
       font-family: "JetBrains Mono", monospace;
+      line-height: 1;
     }
 
     .core-track {
-      height: 8px;
+      width: 16px;
+      flex: 1;
+      min-height: 76px;
       border-radius: 999px;
       background: rgba(255,255,255,0.08);
       overflow: hidden;
+      display: flex;
+      align-items: flex-end;
     }
 
     .core-fill {
-      height: 100%;
-      width: 0%;
+      width: 100%;
+      height: 0%;
       border-radius: inherit;
-      transition: width 0.35s ease, background 0.25s ease;
+      transition: height 0.35s ease, background 0.25s ease;
     }
 
     .history-chart {
@@ -490,6 +483,18 @@
       background: rgba(15, 23, 42, 0.48);
       border: 1px solid rgba(148, 163, 184, 0.10);
       overflow: hidden;
+    }
+
+    .history-chart[data-chart] {
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .history-chart[data-chart]:hover,
+    .history-chart[data-chart]:focus-visible {
+      border-color: rgba(56,189,248,.35);
+      background: rgba(15, 23, 42, 0.64);
+      outline: none;
     }
 
     .history-chart-top,
@@ -523,6 +528,83 @@
     .history-grid-line { stroke: rgba(148, 163, 184, 0.12); stroke-width: 1; }
     .history-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px rgba(56,189,248,.35)); }
     .history-line.secondary { filter: drop-shadow(0 0 8px rgba(167,139,250,.30)); }
+
+    .chart-modal[hidden] { display: none; }
+    .chart-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+    .chart-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, .72);
+    }
+    .chart-modal-card {
+      position: relative;
+      width: min(720px, 100%);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 18px;
+      background: rgba(8,14,28,.96);
+      box-shadow: 0 24px 90px rgba(0,0,0,.65);
+      padding: 16px;
+    }
+    .chart-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .chart-modal-title { margin: 0; font-size: 1.05rem; }
+    .chart-modal-subtitle { margin-top: 4px; color: var(--muted); font-size: .8rem; }
+    .chart-modal-close {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+    .chart-modal svg {
+      width: 100%;
+      height: min(46vh, 300px);
+      display: block;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.52);
+      border: 1px solid rgba(148, 163, 184, 0.10);
+      padding: 8px;
+      overflow: visible;
+    }
+    .chart-modal-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 700;
+    }
+    .chart-modal-legend span::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 6px;
+      border-radius: 999px;
+      background: var(--legend-color, #38bdf8);
+    }
+
+    .hero,
+    .panel { scroll-margin-top: 86px; }
 
     .gpu-chip,
     .battery-chip,
@@ -787,8 +869,7 @@
         position: fixed;
         inset: 0;
         z-index: 35;
-        background: rgba(2, 6, 23, .58);
-        backdrop-filter: blur(3px);
+        background: rgba(2, 6, 23, .48);
       }
       .search-chip, .server-selector .chip { display:none; }
       body{padding-bottom:84px;}
@@ -804,12 +885,9 @@
       .temperature-grid,
       .battery-chip,
       .proc-grid { grid-template-columns: 1fr; }
-      .core-item {
-        flex-basis: calc(50% - 5px);
-        min-width: calc(50% - 5px);
-        max-width: none;
-        min-height: 54px;
-      }
+      .cores { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; min-height: 144px; padding: 8px; }
+      .core-item { min-height: 122px; }
+      .core-track { width: 14px; min-height: 66px; }
     }
 
     @media (max-width: 460px) {
@@ -820,10 +898,9 @@
       .hero { border-radius: 0; }
       .quick-value { font-size: 1.16rem; }
       .quick-meta { font-size: 0.7rem; }
-      .core-item {
-        flex-basis: 100%;
-        min-width: 100%;
-      }
+      .cores { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .core-label { font-size: .64rem; }
+      .core-value { font-size: .68rem; }
     }
   </style>
 </head>
@@ -928,7 +1005,7 @@
         <button class="refresh-btn" id="refresh-now" type="button">Refresh now</button>
       </div>
     </header>
-    <section class="hero">
+    <section class="hero" id="overview-section">
       <div class="quick-grid">
         <div class="quick-card" style="--quick-accent:#38bdf8">
           <div class="quick-card-header">
@@ -991,7 +1068,7 @@
 
     <section class="layout">
       <div class="stack">
-        <article class="panel">
+        <article class="panel" id="cpu-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">CPU and memory</h2>
@@ -1013,7 +1090,7 @@
             </div>
           </div>
 
-          <div class="history-chart" aria-label="CPU load history">
+          <div class="history-chart" data-chart="cpu" tabindex="0" role="button" aria-label="Open CPU load graph">
             <div class="history-chart-top">
               <span>CPU load</span>
               <strong>Current: <span id="cpu-history-current">--%</span></strong>
@@ -1045,7 +1122,7 @@
           <div class="cores" id="cores"></div>
         </article>
 
-        <article class="panel">
+        <article class="panel" id="processes-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Top workloads</h2>
@@ -1084,7 +1161,7 @@
       </div>
 
       <div class="stack">
-        <article class="panel">
+        <article class="panel" id="gpu-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Graphics</h2>
@@ -1111,7 +1188,7 @@
           <div class="sparkline" id="spark-gpu-panel" aria-hidden="true"></div>
         </article>
 
-        <article class="panel">
+        <article class="panel" id="network-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Network</h2>
@@ -1133,7 +1210,7 @@
             </div>
           </div>
 
-          <div class="history-chart" aria-label="Network throughput history">
+          <div class="history-chart" data-chart="network" tabindex="0" role="button" aria-label="Open network activity graph">
             <div class="history-chart-top">
               <span>Network activity</span>
               <strong><span style="color:#38bdf8">↓</span> <span id="net-history-down">--</span> MB/s · <span style="color:#a78bfa">↑</span> <span id="net-history-up">--</span> MB/s</strong>
@@ -1159,7 +1236,7 @@
           </div>
         </article>
 
-        <article class="panel">
+        <article class="panel" id="sensors-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Temperatures</h2>
@@ -1172,7 +1249,7 @@
           <a class="view-all" href="#" onclick="return false;">View all sensors →</a>
         </article>
 
-        <article class="panel">
+        <article class="panel" id="power-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Power and battery</h2>
@@ -1231,6 +1308,21 @@
     <div class="footer" id="timestamp">--</div>
       </div>
     </div>
+    <div class="chart-modal" id="chart-modal" hidden role="dialog" aria-modal="true" aria-labelledby="chart-modal-title">
+      <div class="chart-modal-backdrop" data-close-modal></div>
+      <div class="chart-modal-card">
+        <div class="chart-modal-head">
+          <div>
+            <h2 class="chart-modal-title" id="chart-modal-title">Graph</h2>
+            <div class="chart-modal-subtitle" id="chart-modal-subtitle">Last 60 samples</div>
+          </div>
+          <button class="chart-modal-close" type="button" id="chart-modal-close" aria-label="Close graph">×</button>
+        </div>
+        <svg id="chart-modal-svg" viewBox="0 0 320 160" preserveAspectRatio="none" role="img" aria-label="Expanded graph"></svg>
+        <div class="chart-modal-legend" id="chart-modal-legend"></div>
+      </div>
+    </div>
+
     <nav class="mobile-tabs">
       <a class="mobile-tab active" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1409,10 +1501,10 @@
     }
 
     function formatCoreLabel(label, index) {
-      if (!label) return 'Core ' + index;
+      if (!label) return 'C' + index;
       var match = String(label).match(/(\d+)$/);
-      if (match) return 'Core ' + match[1];
-      return String(label).replace(/[_-]+/g, ' ').replace(/\b\w/g, function(ch) { return ch.toUpperCase(); });
+      if (match) return 'C' + match[1];
+      return String(label).replace(/^cpu/i, 'C').replace(/[_-]+/g, ' ').replace(/\b\w/g, function(ch) { return ch.toUpperCase(); });
     }
 
     function formatGpuPercent(value) {
@@ -1766,35 +1858,26 @@
           item.className = 'core-item';
           item.title = label + ': ' + pct.toFixed(1) + '%';
 
-          var main = document.createElement('div');
-          main.className = 'core-main';
-
-          var head = document.createElement('div');
-          head.className = 'core-head';
-
-          var name = document.createElement('span');
-          name.className = 'core-label';
-          name.textContent = label;
-
           var value = document.createElement('span');
           value.className = 'core-value';
           value.textContent = fmt(pct) + '%';
-
-          head.appendChild(name);
-          head.appendChild(value);
 
           var track = document.createElement('div');
           track.className = 'core-track';
 
           var fill = document.createElement('div');
           fill.className = 'core-fill';
-          fill.style.width = Math.max(4, Math.min(100, pct)) + '%';
-          fill.style.background = colorBar(pct);
+          fill.style.height = Math.max(4, Math.min(100, pct)) + '%';
+          fill.style.background = 'linear-gradient(180deg, #38bdf8, #2563eb)';
+
+          var name = document.createElement('span');
+          name.className = 'core-label';
+          name.textContent = label;
 
           track.appendChild(fill);
-          main.appendChild(head);
-          main.appendChild(track);
-          item.appendChild(main);
+          item.appendChild(value);
+          item.appendChild(track);
+          item.appendChild(name);
           el.appendChild(item);
         }
       });
@@ -1862,24 +1945,144 @@
       });
     }
 
+    function chartPoints(values, height) {
+      values = values && values.length ? values : [0, 0];
+      var width = 320;
+      var denom = Math.max(1, values.length - 1);
+      return values.map(function(v, i) {
+        var x = (i / denom) * width;
+        var y = height - ((Math.max(0, Math.min(100, v)) / 100) * height);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      }).join(' ');
+    }
+
+    function openChartModal(kind) {
+      var modal = document.getElementById('chart-modal');
+      var svg = document.getElementById('chart-modal-svg');
+      var title = document.getElementById('chart-modal-title');
+      var subtitle = document.getElementById('chart-modal-subtitle');
+      var legend = document.getElementById('chart-modal-legend');
+      if (!modal || !svg || !title || !subtitle || !legend) return;
+
+      var series;
+      if (kind === 'network') {
+        title.textContent = 'Network activity';
+        subtitle.textContent = 'Expanded throughput history · last 60 samples';
+        series = [
+          { label: 'Download', color: '#38bdf8', values: historyState.netDown },
+          { label: 'Upload', color: '#a78bfa', values: historyState.netUp }
+        ];
+      } else {
+        title.textContent = 'CPU load';
+        subtitle.textContent = 'Expanded CPU utilization history · last 60 samples';
+        series = [{ label: 'CPU', color: '#38bdf8', values: historyState.cpu }];
+      }
+
+      var grid = [0, 40, 80, 120, 160].map(function(y) {
+        return '<line class="history-grid-line" x1="0" y1="' + y + '" x2="320" y2="' + y + '"></line>';
+      }).join('');
+      var lines = series.map(function(item, index) {
+        return '<polyline class="history-line' + (index ? ' secondary' : '') + '" stroke="' + item.color + '" points="' + chartPoints(item.values, 160) + '"></polyline>';
+      }).join('');
+      svg.innerHTML = grid + lines;
+      legend.innerHTML = series.map(function(item) {
+        var latest = item.values && item.values.length ? item.values[item.values.length - 1].toFixed(1) + '%' : '--';
+        return '<span style="--legend-color:' + item.color + '">' + item.label + ' · ' + latest + '</span>';
+      }).join('');
+      modal.hidden = false;
+      document.body.classList.add('modal-open');
+      var close = document.getElementById('chart-modal-close');
+      if (close) close.focus({ preventScroll: true });
+    }
+
+    function closeChartModal() {
+      var modal = document.getElementById('chart-modal');
+      if (modal) modal.hidden = true;
+      document.body.classList.remove('modal-open');
+    }
+
+    function openMobileSidebar() {
+      var sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+      sidebar.classList.add('is-open');
+      document.body.classList.add('mobile-sidebar-open');
+    }
+
     function closeMobileSidebar() {
       var sidebar = document.querySelector('.sidebar');
       if (sidebar) sidebar.classList.remove('is-open');
       document.body.classList.remove('mobile-sidebar-open');
     }
 
-    var hamburger = document.getElementById('mobile-hamburger');
-    if (hamburger) {
-      hamburger.addEventListener('click', function() {
-        var sidebar = document.querySelector('.sidebar');
-        if (!sidebar) return;
-        var open = sidebar.classList.toggle('is-open');
-        document.body.classList.toggle('mobile-sidebar-open', open);
+    function navTargetFor(item) {
+      var label = (item.textContent || '').trim().toLowerCase().split(/\s+/)[0];
+      var targets = {
+        overview: 'overview-section',
+        cpu: 'cpu-section',
+        memory: 'cpu-section',
+        gpu: 'gpu-section',
+        network: 'network-section',
+        sensors: 'sensors-section',
+        power: 'power-section',
+        processes: 'processes-section'
+      };
+      return targets[label] || null;
+    }
+
+    function setActiveNav(item) {
+      var label = (item.textContent || '').trim().toLowerCase().split(/\s+/)[0];
+      document.querySelectorAll('.nav-item, .mobile-tab').forEach(function(el) {
+        var elLabel = (el.textContent || '').trim().toLowerCase().split(/\s+/)[0];
+        el.classList.toggle('active', elLabel === label);
       });
     }
-    document.querySelectorAll('.sidebar .nav-item').forEach(function(item) {
-      item.addEventListener('click', closeMobileSidebar);
+
+    var hamburger = document.getElementById('mobile-hamburger');
+    if (hamburger) {
+      hamburger.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+        if (sidebar.classList.contains('is-open')) closeMobileSidebar();
+        else openMobileSidebar();
+      });
+    }
+
+    document.querySelectorAll('.nav-item, .mobile-tab').forEach(function(item) {
+      item.addEventListener('click', function(event) {
+        event.preventDefault();
+        var label = (item.textContent || '').trim().toLowerCase().split(/\s+/)[0];
+        if (label === 'more' || !navTargetFor(item)) {
+          if (label === 'more') {
+            event.stopPropagation();
+            openMobileSidebar();
+          }
+          return;
+        }
+        var target = document.getElementById(navTargetFor(item));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setActiveNav(item);
+        closeMobileSidebar();
+      });
     });
+
+    document.querySelectorAll('.history-chart[data-chart]').forEach(function(chart) {
+      chart.addEventListener('click', function() { openChartModal(chart.getAttribute('data-chart')); });
+      chart.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openChartModal(chart.getAttribute('data-chart'));
+        }
+      });
+    });
+
+    var modalClose = document.getElementById('chart-modal-close');
+    if (modalClose) modalClose.addEventListener('click', closeChartModal);
+    document.querySelectorAll('[data-close-modal]').forEach(function(el) {
+      el.addEventListener('click', closeChartModal);
+    });
+
     document.addEventListener('click', function(event) {
       if (!document.body.classList.contains('mobile-sidebar-open')) return;
       var sidebar = document.querySelector('.sidebar');
@@ -1888,7 +2091,10 @@
       closeMobileSidebar();
     });
     document.addEventListener('keydown', function(event) {
-      if (event.key === 'Escape') closeMobileSidebar();
+      if (event.key === 'Escape') {
+        closeChartModal();
+        closeMobileSidebar();
+      }
     });
 
     document.addEventListener('visibilitychange', function() {
@@ -1905,9 +2111,6 @@
     });
     window.addEventListener('focus', function() {
       syncPollingState(true);
-    });
-    window.addEventListener('blur', function() {
-      syncPollingState(false);
     });
     window.addEventListener('pageshow', function() {
       syncPollingState(true);
