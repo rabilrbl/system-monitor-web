@@ -683,8 +683,23 @@
       transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease;
     }
     .battery-gauge-text {
-      position: absolute; inset: 0; display: grid; place-items: center;
-      font-family: "JetBrains Mono", monospace; font-size: 1.1rem; font-weight: 700;
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      white-space: nowrap;
+    }
+    .battery-gauge-text .battery-gauge-unit {
+      margin-left: 1px;
+      font-size: 0.72em;
+      color: var(--muted);
+      letter-spacing: -0.02em;
     }
     .battery-hero {
       display: flex;
@@ -1264,7 +1279,7 @@
                 <circle class="battery-gauge-track" cx="50" cy="50" r="42"></circle>
                 <circle class="battery-gauge-fill" id="bat-gauge-fill" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89" stroke="#22c55e"></circle>
               </svg>
-              <div class="battery-gauge-text"><span id="bat-pct-2">--</span>%</div>
+              <div class="battery-gauge-text"><span id="bat-pct-2">--</span><span class="battery-gauge-unit">%</span></div>
             </div>
             <div>
               <div class="value" style="font-size:1.3rem;font-weight:700;"><span id="bat-pct-3">--</span>%</div>
