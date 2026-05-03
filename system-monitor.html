@@ -85,6 +85,8 @@
     .topbar-brand{display:none;align-items:center;gap:8px;font-weight:800;letter-spacing:-.02em;color:var(--text);}
     .topbar-brand svg{width:18px;height:18px;color:#38bdf8;}
     .chip{padding:5px 9px;border-radius:999px;border:1px solid var(--panel-border);font-size:.75rem;color:var(--muted);}
+    .os-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(34,197,94,.2);}
+    .os-chip svg{width:14px;height:14px;flex-shrink:0;}
     .refresh-btn{border:1px solid var(--panel-border);background:rgba(56,189,248,.14);color:#bae6fd;border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer;}
     .refresh-btn:focus-visible{outline:2px solid #38bdf8;outline-offset:2px;}
     .sparkline{margin-top:5px;height:20px;display:flex;align-items:flex-end;gap:3px;opacity:.9;}
@@ -877,7 +879,7 @@
       .topbar-action { grid-area: action; }
       .server-selector { grid-area: server; justify-self: start; max-width: calc(100% - 72px); min-width: 0; }
       .server-selector span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .os-chip { grid-area: server; justify-self: end; align-self: center; }
+      .os-chip { grid-area: server; justify-self: end; align-self: center; z-index: 1; white-space: nowrap; }
       #uptime-chip, #last-updated-chip, #refresh-now { display: none; }
       .sidebar {
         position: fixed;
@@ -897,6 +899,7 @@
         inset: 0;
         z-index: 35;
         background: rgba(2, 6, 23, .48);
+        pointer-events: none;
       }
       .search-chip, .server-selector .chip { display:none; }
       body{padding-bottom:84px;}
@@ -968,57 +971,57 @@
           System Monitor Web
         </div>
         <nav class="nav-list">
-          <a class="nav-item active" href="#">
+          <a class="nav-item active" href="#" data-nav="overview">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             Overview
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="cpu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></svg>
             CPU
           </a>
-          <a class="nav-item" href="#">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h20v16H2z"/><path d="M6 8h2v2H6z"/><path d="M10 8h2v2h-2z"/><path d="M14 8h2v2h-2z"/><path d="M18 8h2v2h-2z"/><path d="M6 12h2v2H6z"/><path d="M10 12h2v2h-2z"/><path d="M14 12h2v2h-2z"/><path d="M18 12h2v2h-2z"/></svg>
+          <a class="nav-item" href="#" data-nav="memory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7V4"/><path d="M11 7V4"/><path d="M15 7V4"/><path d="M19 7V4"/><path d="M7 20v-3"/><path d="M11 20v-3"/><path d="M15 20v-3"/><path d="M19 20v-3"/><path d="M7 11h10"/><path d="M7 14h6"/></svg>
             Memory
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="gpu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v4h4"/><path d="M18 4l-6 6"/><path d="M4 14h4v4"/><path d="M4 18l6-6"/><path d="M14 14h4v4"/><path d="M14 18l6-6"/></svg>
             GPU
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="network">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
             Network
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="disks">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Disks
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="sensors">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
             Sensors
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="power">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             Power
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="processes">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             Processes
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="services">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
             Services
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="logs">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             Logs
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-nav="alerts">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
             Alerts
           </a>
         </nav>
         <div class="spacer"></div>
-        <a class="nav-item" href="#">
+        <a class="nav-item" href="#" data-nav="system">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           System
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -1034,13 +1037,13 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           <span>System Monitor Web</span>
         </div>
-        <div class="server-selector">
+        <div class="server-selector" id="server-selector" role="button" tabindex="0" title="Server details">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
           <span id="host-chip-top">homelab-server</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <span class="chip os-chip" style="background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(34,197,94,.2);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:middle;margin-right:3px;"><path d="M12 2a10 10 0 0110 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        <span class="chip os-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c-2.8 0-5 3.2-5 7.2 0 1.6-.9 3-1.8 4.5-.8 1.3-.6 3 .4 4.1C6.8 19.2 9.1 20 12 20s5.2-.8 6.4-2.2c1-1.1 1.2-2.8 .4-4.1C17.9 12.2 17 10.8 17 9.2 17 5.2 14.8 2 12 2z"/><path d="M9.5 9h.01"/><path d="M14.5 9h.01"/><path d="M10 13c.7.5 1.3.7 2 .7s1.3-.2 2-.7"/><path d="M8 19l-2 2"/><path d="M16 19l2 2"/></svg>
           Linux
         </span>
         <span class="chip" id="uptime-chip">Uptime: --</span>
@@ -1052,7 +1055,7 @@
           <kbd>⌘K</kbd>
         </span>
         <span class="chip" id="last-updated-chip">Updated -- ago</span>
-        <button class="topbar-action" title="Settings" type="button">
+        <button class="topbar-action" id="settings-button" title="Settings" type="button" aria-label="Open settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </button>
         <button class="refresh-btn" id="refresh-now" type="button">Refresh now</button>
@@ -1071,7 +1074,7 @@
         </div>
         <div class="quick-card" style="--quick-accent:#a78bfa">
           <div class="quick-card-header">
-            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h20v16H2z"/><path d="M6 8h2v2H6z"/><path d="M10 8h2v2h-2z"/><path d="M14 8h2v2h-2z"/><path d="M18 8h2v2h-2z"/><path d="M6 12h2v2H6z"/><path d="M10 12h2v2h-2z"/><path d="M14 12h2v2h-2z"/><path d="M18 12h2v2h-2z"/></svg>
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7V4"/><path d="M11 7V4"/><path d="M15 7V4"/><path d="M19 7V4"/><path d="M7 20v-3"/><path d="M11 20v-3"/><path d="M15 20v-3"/><path d="M19 20v-3"/><path d="M7 11h10"/><path d="M7 14h6"/></svg>
             <div class="quick-label">Memory</div>
           </div>
           <div class="quick-value"><span id="mem-pct">--</span>%</div>
@@ -1377,23 +1380,23 @@
     </div>
 
     <nav class="mobile-tabs">
-      <a class="mobile-tab active" href="#">
+      <a class="mobile-tab active" href="#" data-nav="overview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Overview
       </a>
-      <a class="mobile-tab" href="#">
+      <a class="mobile-tab" href="#" data-nav="cpu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></svg>
         CPU
       </a>
-      <a class="mobile-tab" href="#">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h20v16H2z"/><path d="M6 8h2v2H6z"/><path d="M10 8h2v2h-2z"/><path d="M14 8h2v2h-2z"/><path d="M18 8h2v2h-2z"/><path d="M6 12h2v2H6z"/><path d="M10 12h2v2h-2z"/><path d="M14 12h2v2h-2z"/><path d="M18 12h2v2h-2z"/></svg>
+      <a class="mobile-tab" href="#" data-nav="memory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7V4"/><path d="M11 7V4"/><path d="M15 7V4"/><path d="M19 7V4"/><path d="M7 20v-3"/><path d="M11 20v-3"/><path d="M15 20v-3"/><path d="M19 20v-3"/><path d="M7 11h10"/><path d="M7 14h6"/></svg>
         Memory
       </a>
-      <a class="mobile-tab" href="#">
+      <a class="mobile-tab" href="#" data-nav="network">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
         Network
       </a>
-      <a class="mobile-tab" href="#">
+      <a class="mobile-tab" href="#" data-nav="more">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
         More
       </a>
@@ -1420,7 +1423,7 @@
 
     var sparkState = { cpu: [], mem: [], gpu: [], bat: [], net: [], power: [], netDown: [], netUp: [], gpuPanel: [] };
     var sparkColors = { cpu:'#38bdf8', mem:'#a78bfa', gpu:'#22c55e', bat:'#14b8a6', net:'#38bdf8', power:'#f59e0b', netDown:'#38bdf8', netUp:'#a78bfa', gpuPanel:'#22c55e' };
-    var latestViews = { cpu: [], mem: [], net: [], bandwidth: [], temps: [] };
+    var latestViews = { cpu: [], mem: [], net: [], bandwidth: [], temps: [], cpuPct: null, memPct: null, gpu: null, network: null, power: null, battery: null, uptime: '--', cpuModel: '--' };
     var expandedViews = { cpu: false, mem: false, net: false, bandwidth: false, temps: false };
     var collapsedLimits = { cpu: 5, mem: 5, net: 5, bandwidth: 5, temps: 8 };
 
@@ -1702,6 +1705,7 @@
         }
         if (currCpu) window.prevCpuStat = currCpu;
 
+        latestViews.cpuPct = totalCpu;
         setText('cpu-pct', fmt(totalCpu));
         pushSpark('cpu', totalCpu);
         pushHistory('cpu', totalCpu, 60);
@@ -1719,9 +1723,11 @@
         var label = 'Load ' + (parts[0] || '--') + ' ' + (parts[1] || '--') + ' ' + (parts[2] || '--');
         setText('cpu-load-meta', label);
         setText('cpu-cores-label-2', label);
+        latestViews.loadavg = label;
       });
 
       req('/api/system/cpu_model', function(text) {
+        latestViews.cpuModel = text.trim();
         setText('cpu-model', text.trim());
       });
 
@@ -1744,6 +1750,8 @@
         var swapUsed = swapTotal - swapFree;
         var swapPct = swapTotal > 0 ? (swapUsed * 100 / swapTotal) : 0;
 
+        latestViews.memPct = memPct;
+        latestViews.memLabel = fmtGB(used) + ' / ' + fmtGB(total);
         setText('mem-pct', fmt(memPct));
         pushSpark('mem', memPct);
         setText('mem-info', fmtGB(used) + ' / ' + fmtGB(total));
@@ -1763,6 +1771,7 @@
         var pctLabel = formatGpuPercent(pct);
         var freqLabel = formatGpuFrequency(gpu);
         var activityMeta = formatGpuActivityMeta(gpu);
+        latestViews.gpu = gpu;
 
         setHTML('gpu-freq', pctLabel.replace('%', '') + '<span class="metric-unit">%</span>');
         pushSpark('gpu', pct);
@@ -1778,6 +1787,7 @@
 
       reqJSON('/api/system/network', function(data) {
         if (!data) return;
+        latestViews.network = data;
         var rx = data.rx_bytes || 0;
         var tx = data.tx_bytes || 0;
         setText('net-down', fmt(rx / 1e6));
@@ -1855,11 +1865,13 @@
         var mins = Math.floor((uptimeSec % 3600) / 60);
         var uptimeLabel = 'Up ' + days + 'd ' + hrs + 'h ' + mins + 'm';
         setText('uptime', uptimeLabel);
+        latestViews.uptime = uptimeLabel;
         setText('uptime-chip', 'Uptime: ' + uptimeLabel);
       });
 
       reqJSON('/api/system/power', function(data) {
         if (data) {
+          latestViews.power = data;
           var pkgW = data.package || 0;
           setText('power-pkg', pkgW.toFixed(1));
           pushSpark('power', Math.min(100, (pkgW / 30) * 100));
@@ -1874,6 +1886,7 @@
 
       reqJSON('/api/system/battery', function(data) {
         if (data) {
+          latestViews.battery = data;
           var pct = data.capacity || 0;
           setText('bat-pct', pct);
           pushSpark('bat', pct);
@@ -2042,6 +2055,8 @@
       var subtitle = document.getElementById('chart-modal-subtitle');
       var legend = document.getElementById('chart-modal-legend');
       if (!modal || !svg || !title || !subtitle || !legend) return;
+      svg.style.display = 'block';
+      legend.className = 'chart-modal-legend';
 
       var series;
       if (kind === 'network') {
@@ -2080,6 +2095,86 @@
       document.body.classList.remove('modal-open');
     }
 
+    function escapeHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"]/g, function(ch) {
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[ch];
+      });
+    }
+
+    function modalCard(label, value) {
+      return '<div class="modal-info-card"><span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(value) + '</strong></div>';
+    }
+
+    function modalButton(label, nav) {
+      return '<button class="modal-action-btn" type="button" data-modal-nav="' + escapeHtml(nav) + '">' + escapeHtml(label) + '</button>';
+    }
+
+    function currentAlertItems() {
+      var items = [];
+      if (latestViews.cpuPct != null && latestViews.cpuPct >= 90) items.push('CPU load is high: ' + fmt(latestViews.cpuPct) + '%');
+      if (latestViews.memPct != null && latestViews.memPct >= 90) items.push('Memory pressure is high: ' + fmt(latestViews.memPct) + '%');
+      if (latestViews.battery && latestViews.battery.capacity != null && latestViews.battery.capacity < 20 && !latestViews.battery.ac_online) items.push('Battery is low: ' + latestViews.battery.capacity + '%');
+      var hot = (latestViews.temps || []).filter(function(sensor) { return Number(sensor.value_c) >= 80; });
+      hot.forEach(function(sensor) { items.push((sensor.label || sensor.source || 'Sensor') + ' is hot: ' + Number(sensor.value_c).toFixed(1) + ' °C'); });
+      return items;
+    }
+
+    function infoPanel(kind) {
+      var cpu = latestViews.cpuPct == null ? '--' : fmt(latestViews.cpuPct) + '%';
+      var mem = latestViews.memPct == null ? '--' : fmt(latestViews.memPct) + '%';
+      var net = latestViews.network ? '↓ ' + fmt((latestViews.network.rx_bytes || 0) / 1e6) + ' MB/s · ↑ ' + fmt((latestViews.network.tx_bytes || 0) / 1e6) + ' MB/s' : '--';
+      var pkg = latestViews.power && latestViews.power.package != null ? Number(latestViews.power.package).toFixed(1) + ' W' : '--';
+      var bat = latestViews.battery && latestViews.battery.capacity != null ? latestViews.battery.capacity + '% · ' + (latestViews.battery.status || '--') : '--';
+      var cards = '<div class="modal-card-grid">' +
+        modalCard('Server', document.getElementById('host-chip-top') ? document.getElementById('host-chip-top').textContent : 'homelab-server') +
+        modalCard('OS', 'Linux') + modalCard('Uptime', latestViews.uptime || '--') + modalCard('Updated', lastUpdateTime ? fmtAgo(Date.now() - lastUpdateTime) : '--') + '</div>';
+      var actions = '<div class="modal-action-row">' + modalButton('Overview', 'overview') + modalButton('CPU', 'cpu') + modalButton('Memory', 'memory') + modalButton('Network', 'network') + modalButton('Sensors', 'sensors') + modalButton('Power', 'power') + '</div>';
+
+      if (kind === 'alerts') {
+        var alerts = currentAlertItems();
+        return {
+          title: 'Alerts',
+          subtitle: alerts.length ? alerts.length + ' active alert' + (alerts.length === 1 ? '' : 's') : 'No active threshold alerts',
+          html: alerts.length ? '<div class="modal-alert">' + alerts.map(escapeHtml).join('<br>') + '</div>' + actions : '<div class="modal-muted">No CPU, memory, battery, or temperature thresholds are currently tripped.</div>' + actions
+        };
+      }
+      if (kind === 'settings') {
+        return { title: 'Settings', subtitle: 'Dashboard controls', html: '<div class="modal-card-grid">' + modalCard('Refresh cadence', 'Telemetry 2s · cores 3s') + modalCard('Timezone', 'Asia/Calcutta') + modalCard('Charts', 'Click CPU/Network graphs') + modalCard('Keyboard', 'Esc closes dialogs') + '</div><div class="modal-action-row"><button class="modal-action-btn" type="button" data-modal-action="refresh">Refresh now</button>' + modalButton('CPU graph', 'cpu') + modalButton('Network graph', 'network') + '</div>' };
+      }
+      if (kind === 'system' || kind === 'server') {
+        return { title: 'System', subtitle: latestViews.cpuModel || 'Host details', html: cards + '<div class="modal-card-grid">' + modalCard('CPU', cpu) + modalCard('Memory', mem) + modalCard('Network', net) + modalCard('Package power', pkg) + modalCard('Battery', bat) + modalCard('Load', latestViews.loadavg || '--') + '</div>' + actions };
+      }
+      if (kind === 'search') {
+        return { title: 'Quick action', subtitle: 'Jump to a dashboard section', html: actions };
+      }
+      var titles = { disks: 'Disks', services: 'Services', logs: 'Logs' };
+      var copy = {
+        disks: 'Disk telemetry is not exposed by the current backend routes yet. Existing storage-adjacent telemetry is still available through System and Sensors.',
+        services: 'Service management is not exposed by the current backend routes yet. Current process and bandwidth leaders are available in Top workloads.',
+        logs: 'Log streaming is not exposed by the current backend routes yet. Current runtime status is available through Alerts and System.'
+      };
+      return { title: titles[kind] || 'Menu', subtitle: 'Action available', html: '<div class="modal-muted">' + escapeHtml(copy[kind] || 'This menu item is wired.') + '</div>' + actions };
+    }
+
+    function openInfoModal(kind) {
+      var modal = document.getElementById('chart-modal');
+      var svg = document.getElementById('chart-modal-svg');
+      var title = document.getElementById('chart-modal-title');
+      var subtitle = document.getElementById('chart-modal-subtitle');
+      var body = document.getElementById('chart-modal-legend');
+      if (!modal || !svg || !title || !subtitle || !body) return;
+      var panel = infoPanel(kind);
+      title.textContent = panel.title;
+      subtitle.textContent = panel.subtitle;
+      svg.style.display = 'none';
+      body.className = 'chart-modal-content';
+      body.innerHTML = panel.html;
+      modal.hidden = false;
+      document.body.classList.add('modal-open');
+      var close = document.getElementById('chart-modal-close');
+      if (close) close.focus({ preventScroll: true });
+    }
+
     function openMobileSidebar() {
       var sidebar = document.querySelector('.sidebar');
       if (!sidebar) return;
@@ -2093,8 +2188,13 @@
       document.body.classList.remove('mobile-sidebar-open');
     }
 
+    function navKeyFor(item) {
+      if (typeof item === 'string') return item;
+      return item.getAttribute('data-nav') || (item.textContent || '').trim().toLowerCase().split(/\s+/)[0];
+    }
+
     function navTargetFor(item) {
-      var label = (item.textContent || '').trim().toLowerCase().split(/\s+/)[0];
+      var key = navKeyFor(item);
       var targets = {
         overview: 'overview-section',
         cpu: 'cpu-section',
@@ -2105,14 +2205,21 @@
         power: 'power-section',
         processes: 'processes-section'
       };
-      return targets[label] || null;
+      return targets[key] || null;
+    }
+
+    function scrollToNav(key) {
+      var targetId = navTargetFor(key);
+      var target = targetId ? document.getElementById(targetId) : null;
+      if (!target) return false;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return true;
     }
 
     function setActiveNav(item) {
-      var label = (item.textContent || '').trim().toLowerCase().split(/\s+/)[0];
+      var key = navKeyFor(item);
       document.querySelectorAll('.nav-item, .mobile-tab').forEach(function(el) {
-        var elLabel = (el.textContent || '').trim().toLowerCase().split(/\s+/)[0];
-        el.classList.toggle('active', elLabel === label);
+        el.classList.toggle('active', navKeyFor(el) === key);
       });
     }
 
@@ -2154,20 +2261,54 @@
     document.querySelectorAll('.nav-item, .mobile-tab').forEach(function(item) {
       item.addEventListener('click', function(event) {
         event.preventDefault();
-        var label = (item.textContent || '').trim().toLowerCase().split(/\s+/)[0];
-        if (label === 'more' || !navTargetFor(item)) {
-          if (label === 'more') {
-            event.stopPropagation();
-            openMobileSidebar();
-          }
+        var key = navKeyFor(item);
+        if (key === 'more') {
+          event.stopPropagation();
+          openMobileSidebar();
           return;
         }
-        var target = document.getElementById(navTargetFor(item));
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (scrollToNav(key)) {
+          setActiveNav(item);
+          closeMobileSidebar();
+          return;
+        }
+        openInfoModal(key);
         setActiveNav(item);
         closeMobileSidebar();
       });
     });
+
+    var modalBody = document.getElementById('chart-modal-legend');
+    if (modalBody) {
+      modalBody.addEventListener('click', function(event) {
+        var navButton = event.target.closest('[data-modal-nav]');
+        if (navButton) {
+          var key = navButton.getAttribute('data-modal-nav');
+          closeChartModal();
+          scrollToNav(key);
+          return;
+        }
+        var actionButton = event.target.closest('[data-modal-action]');
+        if (actionButton && actionButton.getAttribute('data-modal-action') === 'refresh') {
+          update();
+          updateCores();
+          actionButton.textContent = 'Refreshing…';
+          waitForFetchIdle(5000).then(function() { actionButton.textContent = 'Refresh now'; refreshRelativeTimestamp(); });
+        }
+      });
+    }
+
+    var settingsButton = document.getElementById('settings-button');
+    if (settingsButton) settingsButton.addEventListener('click', function() { openInfoModal('settings'); });
+    var serverSelector = document.getElementById('server-selector');
+    if (serverSelector) {
+      serverSelector.addEventListener('click', function() { openInfoModal('server'); });
+      serverSelector.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openInfoModal('server'); }
+      });
+    }
+    var searchChip = document.getElementById('search-chip');
+    if (searchChip) searchChip.addEventListener('click', function() { openInfoModal('search'); });
 
     document.querySelectorAll('.history-chart[data-chart]').forEach(function(chart) {
       chart.addEventListener('click', function() { openChartModal(chart.getAttribute('data-chart')); });
