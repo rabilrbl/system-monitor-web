@@ -25,8 +25,8 @@
       --warn: #f59e0b;
       --danger: #ef4444;
       --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
-      --radius: 24px;
-      --radius-sm: 16px;
+      --radius: 18px;
+      --radius-sm: 14px;
       --max: 1280px;
     }
 
@@ -90,7 +90,7 @@
 
 
     .app-shell{display:grid;grid-template-columns:220px 1fr;gap:14px;}
-    .sidebar{border:1px solid var(--panel-border);border-radius:22px;background:rgba(8,14,28,.92);padding:14px;position:sticky;top:10px;height:calc(100vh - 20px);display:flex;flex-direction:column;}
+    .sidebar{border:1px solid var(--panel-border);border-radius:16px;background:rgba(8,14,28,.92);padding:14px;position:sticky;top:10px;height:calc(100vh - 20px);display:flex;flex-direction:column;}
     .brand{display:flex;align-items:center;gap:10px;font-weight:700;margin-bottom:14px;}
     .brand-badge{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(56,189,248,.14);color:#38bdf8}
     .brand-badge svg { width: 18px; height: 18px; }
@@ -137,7 +137,7 @@
     .hero {
       padding: 18px;
       border: 1px solid var(--panel-border);
-      border-radius: 28px;
+      border-radius: 18px;
       background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(9, 15, 28, 0.95));
       box-shadow: var(--shadow);
       backdrop-filter: blur(16px);
@@ -480,6 +480,48 @@
       transition: width 0.35s ease, background 0.25s ease;
     }
 
+    .history-chart {
+      position: relative;
+      margin: 14px 0;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.48);
+      border: 1px solid rgba(148, 163, 184, 0.10);
+      overflow: hidden;
+    }
+
+    .history-chart-top,
+    .history-chart-axis {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .history-chart-top strong {
+      color: var(--text);
+      font-family: "JetBrains Mono", monospace;
+      letter-spacing: -0.02em;
+      text-transform: none;
+    }
+
+    .history-chart svg {
+      display: block;
+      width: 100%;
+      height: 120px;
+      margin: 10px 0 6px;
+      overflow: visible;
+    }
+
+    .history-grid-line { stroke: rgba(148, 163, 184, 0.12); stroke-width: 1; }
+    .history-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px rgba(56,189,248,.35)); }
+    .history-line.secondary { filter: drop-shadow(0 0 8px rgba(167,139,250,.30)); }
+
     .gpu-chip,
     .battery-chip,
     .network-grid,
@@ -721,6 +763,26 @@
         background: rgba(255,255,255,0.03); color: var(--text); cursor: pointer;
       }
       .mobile-hamburger svg { width: 18px; height: 18px; }
+      .sidebar {
+        position: fixed;
+        display: flex;
+        inset: 10px auto 10px 10px;
+        width: min(82vw, 280px);
+        height: auto;
+        z-index: 40;
+        transform: translateX(calc(-100% - 24px));
+        transition: transform .22s ease;
+        box-shadow: 0 24px 70px rgba(0,0,0,.55);
+      }
+      .sidebar.is-open { transform: translateX(0); }
+      body.mobile-sidebar-open::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 35;
+        background: rgba(2, 6, 23, .58);
+        backdrop-filter: blur(3px);
+      }
       .search-chip, .server-selector .chip { display:none; }
       body{padding-bottom:84px;}
       .shell { padding: 12px 10px 24px; }
@@ -744,11 +806,13 @@
     }
 
     @media (max-width: 460px) {
-      .quick-grid { grid-template-columns: 1fr; }
-      .quick-card { min-height: 94px; }
+      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .quick-card { min-height: 94px; padding: 12px; }
       .title { font-size: 1.85rem; }
-      .panel, .quick-card { border-radius: 18px; }
-      .hero { border-radius: 22px; }
+      .panel, .quick-card { border-radius: 14px; }
+      .hero { border-radius: 16px; }
+      .quick-value { font-size: 1.16rem; }
+      .quick-meta { font-size: 0.7rem; }
       .core-item {
         flex-basis: 100%;
         min-width: 100%;
@@ -950,6 +1014,22 @@
             </div>
           </div>
 
+          <div class="history-chart" aria-label="CPU load history">
+            <div class="history-chart-top">
+              <span>CPU load</span>
+              <strong>Current: <span id="cpu-history-current">--%</span></strong>
+            </div>
+            <svg viewBox="0 0 320 120" preserveAspectRatio="none" role="img" aria-hidden="true">
+              <line class="history-grid-line" x1="0" y1="0" x2="320" y2="0"></line>
+              <line class="history-grid-line" x1="0" y1="30" x2="320" y2="30"></line>
+              <line class="history-grid-line" x1="0" y1="60" x2="320" y2="60"></line>
+              <line class="history-grid-line" x1="0" y1="90" x2="320" y2="90"></line>
+              <line class="history-grid-line" x1="0" y1="120" x2="320" y2="120"></line>
+              <polyline id="cpu-load-line" class="history-line" stroke="#38bdf8" points=""></polyline>
+            </svg>
+            <div class="history-chart-axis"><span>5m</span><span>4m</span><span>3m</span><span>2m</span><span>1m</span><span>Now</span></div>
+          </div>
+
           <div class="bar-group">
             <div class="bar-top"><span>CPU usage</span><strong><span id="cpu-bar-value">--%</span> · <span id="cpu-cores-label-2">--</span></strong></div>
             <div class="bar-track"><div class="bar-fill" id="cpu-bar"></div></div>
@@ -1052,6 +1132,22 @@
               <div class="v"><span id="net-up">--</span> MB/s</div>
               <div class="sparkline" id="spark-net-up" aria-hidden="true"></div>
             </div>
+          </div>
+
+          <div class="history-chart" aria-label="Network throughput history">
+            <div class="history-chart-top">
+              <span>Network activity</span>
+              <strong><span style="color:#38bdf8">↓</span> <span id="net-history-down">--</span> MB/s · <span style="color:#a78bfa">↑</span> <span id="net-history-up">--</span> MB/s</strong>
+            </div>
+            <svg viewBox="0 0 320 120" preserveAspectRatio="none" role="img" aria-hidden="true">
+              <line class="history-grid-line" x1="0" y1="0" x2="320" y2="0"></line>
+              <line class="history-grid-line" x1="0" y1="40" x2="320" y2="40"></line>
+              <line class="history-grid-line" x1="0" y1="80" x2="320" y2="80"></line>
+              <line class="history-grid-line" x1="0" y1="120" x2="320" y2="120"></line>
+              <polyline id="net-down-line" class="history-line" stroke="#38bdf8" points=""></polyline>
+              <polyline id="net-up-line" class="history-line secondary" stroke="#a78bfa" points=""></polyline>
+            </svg>
+            <div class="history-chart-axis"><span>5m</span><span>4m</span><span>3m</span><span>2m</span><span>1m</span><span>Now</span></div>
           </div>
 
           <div class="bar-group" style="margin-top:14px">
@@ -1194,6 +1290,35 @@
         var h = Math.max(12, Math.round(v));
         return '<span style="height:' + h + '%;background:' + color + '"></span>';
       }).join('');
+    }
+
+    var historyState = { cpu: [], netDown: [], netUp: [] };
+
+    function pushHistory(id, value, limit) {
+      if (!(id in historyState)) return;
+      if (value === undefined || value === null || isNaN(value)) return;
+      var arr = historyState[id];
+      arr.push(Math.max(0, Math.min(100, Number(value))));
+      while (arr.length > (limit || 60)) arr.shift();
+    }
+
+    function renderLineChart(lineId, values) {
+      var line = document.getElementById(lineId);
+      if (!line || !values || !values.length) return;
+      var width = 320;
+      var height = 120;
+      var denom = Math.max(1, values.length - 1);
+      var points = values.map(function(v, i) {
+        var x = (i / denom) * width;
+        var y = height - ((Math.max(0, Math.min(100, v)) / 100) * height);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      }).join(' ');
+      line.setAttribute('points', points);
+    }
+
+    function refreshRelativeTimestamp() {
+      if (!lastUpdateTime) return;
+      setText('last-updated-chip', 'Updated ' + fmtAgo(Date.now() - lastUpdateTime));
     }
 
     var lastUpdateTime = 0;
@@ -1378,11 +1503,14 @@
 
         setText('cpu-pct', fmt(totalCpu));
         pushSpark('cpu', totalCpu);
+        pushHistory('cpu', totalCpu, 60);
+        renderLineChart('cpu-load-line', historyState.cpu);
         setText('cpu-pct-2', fmt(totalCpu));
+        setText('cpu-history-current', fmt(totalCpu) + '%');
         setText('cpu-bar-value', fmt(totalCpu) + '%');
         var bar = document.getElementById('cpu-bar');
         bar.style.width = totalCpu + '%';
-        bar.style.background = colorBar(totalCpu);
+        bar.style.background = 'linear-gradient(90deg, #38bdf8, #2563eb)';
       });
 
       req('/api/system/loadavg', function(text) {
@@ -1426,7 +1554,7 @@
         setText('mem-info', fmtGB(used) + ' / ' + fmtGB(total));
         setText('mem-info-2', fmtGB(used) + ' / ' + fmtGB(total));
         document.getElementById('mem-bar').style.width = memPct + '%';
-        document.getElementById('mem-bar').style.background = colorBar(memPct);
+        document.getElementById('mem-bar').style.background = 'linear-gradient(90deg, #a78bfa, #7c3aed)';
         setText('mem-bar-label', fmt(memPct) + '%');
         document.getElementById('swap-bar').style.width = swapPct + '%';
         document.getElementById('swap-bar').style.background = colorBar(swapPct);
@@ -1459,8 +1587,16 @@
         var tx = data.tx_bytes || 0;
         setText('net-down', fmt(rx / 1e6));
         pushSpark('net', Math.min(100, (rx / 12.5e6) * 100));
-        pushSpark('netDown', Math.min(100, (rx / 12.5e6) * 100));
-        pushSpark('netUp', Math.min(100, (tx / 12.5e6) * 100));
+        var downPct = Math.min(100, (rx / 12.5e6) * 100);
+        var upPct = Math.min(100, (tx / 12.5e6) * 100);
+        pushSpark('netDown', downPct);
+        pushSpark('netUp', upPct);
+        pushHistory('netDown', downPct, 60);
+        pushHistory('netUp', upPct, 60);
+        renderLineChart('net-down-line', historyState.netDown);
+        renderLineChart('net-up-line', historyState.netUp);
+        setText('net-history-down', fmt(rx / 1e6));
+        setText('net-history-up', fmt(tx / 1e6));
         setText('net-down-2', fmt(rx / 1e6));
         setText('net-up', fmt(tx / 1e6));
         var downLabel = fmt((rx * 8) / 1e6) + ' Mbps';
@@ -1468,8 +1604,8 @@
         setText('net-bar-label-down', downLabel);
         setText('net-bar-label-down-2', downLabel);
         setText('net-bar-label-up', upLabel);
-        document.getElementById('net-bar-down').style.width = Math.min(100, (rx / 12.5e6) * 100) + '%';
-        document.getElementById('net-bar-up').style.width = Math.min(100, (tx / 12.5e6) * 100) + '%';
+        document.getElementById('net-bar-down').style.width = downPct + '%';
+        document.getElementById('net-bar-up').style.width = upPct + '%';
         document.getElementById('net-bar-down').style.background = 'linear-gradient(90deg, #38bdf8, #2563eb)';
         document.getElementById('net-bar-up').style.background = 'linear-gradient(90deg, #22c55e, #16a34a)';
       });
@@ -1612,7 +1748,8 @@
       lastUpdateTime = Date.now();
       setText('timestamp', 'Last updated · ' + stamp);
       setText('timestamp-inline', stamp.split(', ').slice(-1)[0] || stamp);
-      setText('last-updated-chip', 'Updated ' + fmtAgo(0));
+      setText('last-updated-chip', 'Updated just now');
+      refreshRelativeTimestamp();
     }
 
     function updateCores() {
@@ -1712,6 +1849,49 @@
       }
     }
 
+    function waitForFetchIdle(maxMs) {
+      var started = Date.now();
+      return new Promise(function(resolve) {
+        function check() {
+          if (activeFetchControllers.size === 0 || Date.now() - started > maxMs) {
+            resolve();
+            return;
+          }
+          setTimeout(check, 80);
+        }
+        check();
+      });
+    }
+
+    function closeMobileSidebar() {
+      var sidebar = document.querySelector('.sidebar');
+      if (sidebar) sidebar.classList.remove('is-open');
+      document.body.classList.remove('mobile-sidebar-open');
+    }
+
+    var hamburger = document.getElementById('mobile-hamburger');
+    if (hamburger) {
+      hamburger.addEventListener('click', function() {
+        var sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+        var open = sidebar.classList.toggle('is-open');
+        document.body.classList.toggle('mobile-sidebar-open', open);
+      });
+    }
+    document.querySelectorAll('.sidebar .nav-item').forEach(function(item) {
+      item.addEventListener('click', closeMobileSidebar);
+    });
+    document.addEventListener('click', function(event) {
+      if (!document.body.classList.contains('mobile-sidebar-open')) return;
+      var sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+      if (sidebar.contains(event.target) || (hamburger && hamburger.contains(event.target))) return;
+      closeMobileSidebar();
+    });
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') closeMobileSidebar();
+    });
+
     document.addEventListener('visibilitychange', function() {
       syncPollingState(!document.hidden);
     });
@@ -1719,7 +1899,10 @@
       setText('refresh-status', 'Refresh: syncing...');
       update();
       updateCores();
-      setTimeout(function() { setText('refresh-status', 'Refresh: live'); }, 1000);
+      waitForFetchIdle(5000).then(function() {
+        setText('refresh-status', 'Refresh: live');
+        refreshRelativeTimestamp();
+      });
     });
     window.addEventListener('focus', function() {
       syncPollingState(true);
@@ -1734,6 +1917,7 @@
       stopPolling();
     });
 
+    setInterval(refreshRelativeTimestamp, 1000);
     syncPollingState(true);
   </script>
 </body>
