@@ -93,11 +93,46 @@
     .sidebar{border:1px solid var(--panel-border);border-radius:22px;background:rgba(8,14,28,.92);padding:14px;position:sticky;top:10px;height:calc(100vh - 20px);display:flex;flex-direction:column;}
     .brand{display:flex;align-items:center;gap:10px;font-weight:700;margin-bottom:14px;}
     .brand-badge{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(56,189,248,.14);color:#38bdf8}
+    .brand-badge svg { width: 18px; height: 18px; }
     .nav-list{display:grid;gap:6px}
     .nav-item{padding:10px 12px;border-radius:12px;color:#a9b7cc;text-decoration:none;font-weight:600;display:flex;gap:10px;align-items:center}
     .nav-item.active,.nav-item:hover{background:rgba(56,189,248,.12);color:#7dd3fc}
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-item .chevron { margin-left: auto; width: 14px; height: 14px; opacity: 0.5; }
     .spacer{flex:1}
     .mobile-tabs{display:none}
+    .mobile-hamburger { display: none; }
+    .server-selector {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px; border-radius: 10px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.03);
+      font-size: 0.78rem; font-weight: 600; color: var(--text);
+      cursor: pointer;
+    }
+    .server-selector svg { width: 14px; height: 14px; color: var(--muted); }
+    .search-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px; border-radius: 10px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.03);
+      font-size: 0.75rem; color: var(--muted);
+      cursor: pointer; min-width: 180px;
+    }
+    .search-chip svg { width: 14px; height: 14px; }
+    .search-chip kbd {
+      margin-left: auto; padding: 2px 5px; border-radius: 4px;
+      background: rgba(255,255,255,0.08); font-size: 0.65rem;
+      font-family: JetBrains Mono, monospace; color: var(--muted-2);
+    }
+    .topbar-action {
+      display: grid; place-items: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted); cursor: pointer;
+    }
+    .topbar-action svg { width: 16px; height: 16px; }
 
     .hero {
       padding: 18px;
@@ -194,7 +229,29 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      position: relative;
+      overflow: hidden;
     }
+    .quick-card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 999px;
+      background: var(--quick-accent, var(--accent-3));
+      opacity: 0.7;
+    }
+    .quick-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .quick-card-icon {
+      width: 22px; height: 22px; flex-shrink: 0;
+      color: var(--quick-accent, var(--muted));
+    }
+    .quick-card .sparkline span { background: var(--quick-accent, rgba(148,163,184,.35)); }
 
     .quick-label {
       font-size: 0.72rem;
@@ -439,6 +496,27 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .temperature-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .temp-row {
+      display: grid;
+      grid-template-columns: 1fr auto 140px;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .temp-row:last-child { border-bottom: none; }
+    .temp-label { font-size: 0.82rem; color: var(--text); font-weight: 500; }
+    .temp-value { font-family: "JetBrains Mono", monospace; font-size: 0.82rem; font-weight: 700; color: var(--text); }
+    .temp-bar-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .temp-bar-fill { height: 100%; border-radius: inherit; transition: width 0.45s ease, background 0.25s ease; }
+    .view-all { display: block; margin-top: 10px; font-size: 0.78rem; color: var(--accent-3); text-decoration: none; font-weight: 600; }
+    .view-all:hover { text-decoration: underline; }
+
     .battery-chip {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -467,6 +545,21 @@
       word-break: break-word;
     }
 
+    .battery-gauge-wrap {
+      display: flex; align-items: center; gap: 18px; margin-bottom: 14px;
+    }
+    .battery-gauge {
+      position: relative; width: 90px; height: 90px; flex-shrink: 0;
+    }
+    .battery-gauge svg { transform: rotate(-90deg); }
+    .battery-gauge-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
+    .battery-gauge-fill { fill: none; stroke-width: 8; stroke-linecap: round;
+      transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease;
+    }
+    .battery-gauge-text {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      font-family: "JetBrains Mono", monospace; font-size: 1.1rem; font-weight: 700;
+    }
     .battery-hero {
       display: flex;
       align-items: center;
@@ -615,8 +708,20 @@
 
     @media (max-width: 780px) {
       .mobile-tabs{position:fixed;left:8px;right:8px;bottom:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:25;background:rgba(7,17,31,.92);border:1px solid var(--panel-border);border-radius:14px;padding:8px;}
-      .mobile-tabs a{text-decoration:none;color:var(--muted);font-size:.72rem;text-align:center;}
-      .mobile-tabs a.active{color:#38bdf8;font-weight:700;}
+      .mobile-tab {
+        display: flex; flex-direction: column; align-items: center; gap: 3px;
+        text-decoration: none; color: var(--muted); font-size: .65rem; text-align: center;
+        padding: 4px 2px; border-radius: 8px;
+      }
+      .mobile-tab svg { width: 18px; height: 18px; }
+      .mobile-tab.active { color: #38bdf8; font-weight: 700; background: rgba(56,189,248,.1); }
+      .mobile-hamburger {
+        display: grid; width: 32px; height: 32px; place-items: center;
+        border: 1px solid var(--panel-border); border-radius: 8px;
+        background: rgba(255,255,255,0.03); color: var(--text); cursor: pointer;
+      }
+      .mobile-hamburger svg { width: 18px; height: 18px; }
+      .search-chip, .server-selector .chip { display:none; }
       body{padding-bottom:84px;}
       .shell { padding: 12px 10px 24px; }
       .hero { padding: 14px; border-radius: 24px; }
@@ -655,31 +760,96 @@
   <main class="shell">
     <div class="app-shell">
       <aside class="sidebar">
-        <div class="brand"><span class="brand-badge">📈</span>System Monitor Web</div>
+        <div class="brand">
+          <span class="brand-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </span>
+          System Monitor Web
+        </div>
         <nav class="nav-list">
-          <a class="nav-item active" href="#">🏠 Overview</a>
-          <a class="nav-item" href="#">🧠 CPU</a>
-          <a class="nav-item" href="#">💾 Memory</a>
-          <a class="nav-item" href="#">🎮 GPU</a>
-          <a class="nav-item" href="#">🌐 Network</a>
-          <a class="nav-item" href="#">🌡️ Sensors</a>
-          <a class="nav-item" href="#">⚡ Power</a>
-          <a class="nav-item" href="#">📦 Processes</a>
+          <a class="nav-item active" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Overview
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></svg>
+            CPU
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h20v16H2z"/><path d="M6 8h2v2H6z"/><path d="M10 8h2v2h-2z"/><path d="M14 8h2v2h-2z"/><path d="M18 8h2v2h-2z"/><path d="M6 12h2v2H6z"/><path d="M10 12h2v2h-2z"/><path d="M14 12h2v2h-2z"/><path d="M18 12h2v2h-2z"/></svg>
+            Memory
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v4h4"/><path d="M18 4l-6 6"/><path d="M4 14h4v4"/><path d="M4 18l6-6"/><path d="M14 14h4v4"/><path d="M14 18l6-6"/></svg>
+            GPU
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            Network
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Disks
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+            Sensors
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Power
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Processes
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+            Services
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Logs
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            Alerts
+          </a>
         </nav>
         <div class="spacer"></div>
-        <a class="nav-item" href="#">⚙️ System</a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          System
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </a>
       </aside>
       <div>
     <header class="topbar">
       <div class="topbar-left">
-        <strong>System Monitor Web</strong>
-        <span class="chip" id="host-chip">Local host</span>
-        <span class="chip">Linux</span>
+        <button class="mobile-hamburger" id="mobile-hamburger" type="button" title="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="server-selector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          <span id="host-chip-top">homelab-server</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <span class="chip" style="background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(34,197,94,.2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:middle;margin-right:3px;"><path d="M12 2a10 10 0 0110 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+          Linux
+        </span>
         <span class="chip" id="uptime-chip">Uptime: --</span>
       </div>
       <div class="topbar-right">
-        <span class="chip" id="refresh-status">Refresh: live</span>
-        <span class="chip" id="last-updated-chip">Last updated: --</span>
+        <span class="search-chip" id="search-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search (/) or quick action...
+          <kbd>⌘K</kbd>
+        </span>
+        <span class="chip" id="last-updated-chip">Updated -- ago</span>
+        <button class="topbar-action" title="Settings" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
         <button class="refresh-btn" id="refresh-now" type="button">Refresh now</button>
       </div>
     </header>
@@ -697,38 +867,56 @@
       </div>
 
       <div class="quick-grid">
-        <div class="quick-card">
-          <div class="quick-label">CPU</div>
+        <div class="quick-card" style="--quick-accent:#38bdf8">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></svg>
+            <div class="quick-label">CPU</div>
+          </div>
           <div class="quick-value"><span id="cpu-pct">--</span>%</div>
-          <div class="quick-meta" id="cpu-cores-label">--</div>
+          <div class="quick-meta" id="cpu-load-meta">--</div>
           <div class="sparkline" id="spark-cpu" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">Memory</div>
+        <div class="quick-card" style="--quick-accent:#a78bfa">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h20v16H2z"/><path d="M6 8h2v2H6z"/><path d="M10 8h2v2h-2z"/><path d="M14 8h2v2h-2z"/><path d="M18 8h2v2h-2z"/><path d="M6 12h2v2H6z"/><path d="M10 12h2v2h-2z"/><path d="M14 12h2v2h-2z"/><path d="M18 12h2v2h-2z"/></svg>
+            <div class="quick-label">Memory</div>
+          </div>
           <div class="quick-value"><span id="mem-pct">--</span>%</div>
           <div class="quick-meta" id="mem-info">--</div>
           <div class="sparkline" id="spark-mem" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">GPU</div>
+        <div class="quick-card" style="--quick-accent:#22c55e">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v4h4"/><path d="M18 4l-6 6"/><path d="M4 14h4v4"/><path d="M4 18l6-6"/><path d="M14 14h4v4"/><path d="M14 18l6-6"/></svg>
+            <div class="quick-label">GPU</div>
+          </div>
           <div class="quick-value" id="gpu-freq">--<span class="metric-unit">%</span></div>
           <div class="quick-meta" id="gpu-util-label">--</div>
           <div class="sparkline" id="spark-gpu" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">Battery</div>
+        <div class="quick-card" style="--quick-accent:#14b8a6">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01"/><path d="M6 14h.01"/></svg>
+            <div class="quick-label">Battery</div>
+          </div>
           <div class="quick-value"><span id="bat-pct">--</span>%</div>
           <div class="quick-meta" id="bat-status-text">--</div>
           <div class="sparkline" id="spark-bat" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">Download</div>
+        <div class="quick-card" style="--quick-accent:#38bdf8">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <div class="quick-label">Download</div>
+          </div>
           <div class="quick-value"><span id="net-down">--</span></div>
           <div class="quick-meta" id="net-bar-label-down">--</div>
           <div class="sparkline" id="spark-net" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">Package Power</div>
+        <div class="quick-card" style="--quick-accent:#f59e0b">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <div class="quick-label">Package Power</div>
+          </div>
           <div class="quick-value"><span id="power-pkg">--</span>W</div>
           <div class="quick-meta" id="power-bar-label">--</div>
           <div class="sparkline" id="spark-power" aria-hidden="true"></div>
@@ -791,14 +979,17 @@
             <section class="proc-column">
               <h3 style="color:#c4b5fd">CPU</h3>
               <div class="proc-list" id="top-cpu"></div>
+              <a class="view-all" href="#" onclick="return false;">View all →</a>
             </section>
             <section class="proc-column">
               <h3 style="color:#7dd3fc">Memory</h3>
               <div class="proc-list" id="top-mem"></div>
+              <a class="view-all" href="#" onclick="return false;">View all →</a>
             </section>
             <section class="proc-column">
               <h3 style="color:#86efac">Network interfaces</h3>
               <div class="proc-list" id="top-net"></div>
+              <a class="view-all" href="#" onclick="return false;">View all →</a>
             </section>
           </div>
 
@@ -807,6 +998,7 @@
               <h3 style="color:#4ade80">Live network usage by process</h3>
               <div class="proc-subnote">Aggregated across each process's established connections. Showing executable path plus PID.</div>
               <div class="proc-list" id="bandwidth-procs"></div>
+              <a class="view-all" href="#" onclick="return false;">View all →</a>
             </section>
           </div>
         </article>
@@ -837,6 +1029,7 @@
             <div class="bar-top"><span>GPU activity</span><strong id="gpu-bar-value">--</strong></div>
             <div class="bar-track"><div class="bar-fill" id="gpu-bar"></div></div>
           </div>
+          <div class="sparkline" id="spark-gpu-panel" aria-hidden="true"></div>
         </article>
 
         <article class="panel">
@@ -852,10 +1045,12 @@
             <div class="mini">
               <div class="k">Download</div>
               <div class="v"><span id="net-down-2">--</span> MB/s</div>
+              <div class="sparkline" id="spark-net-down" aria-hidden="true"></div>
             </div>
             <div class="mini">
               <div class="k">Upload</div>
               <div class="v"><span id="net-up">--</span> MB/s</div>
+              <div class="sparkline" id="spark-net-up" aria-hidden="true"></div>
             </div>
           </div>
 
@@ -879,6 +1074,7 @@
           </div>
 
           <div class="temperature-grid" id="temperatures"></div>
+          <a class="view-all" href="#" onclick="return false;">View all sensors →</a>
         </article>
 
         <article class="panel">
@@ -890,11 +1086,18 @@
             <div class="badge">Portable status</div>
           </div>
 
-          <div class="battery-hero">
-            <div class="battery-icon" id="bat-icon">🔋</div>
+          <div class="battery-gauge-wrap">
+            <div class="battery-gauge">
+              <svg viewBox="0 0 100 100" width="90" height="90">
+                <circle class="battery-gauge-track" cx="50" cy="50" r="42"></circle>
+                <circle class="battery-gauge-fill" id="bat-gauge-fill" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89" stroke="#22c55e"></circle>
+              </svg>
+              <div class="battery-gauge-text"><span id="bat-pct-2">--</span>%</div>
+            </div>
             <div>
-              <div class="value"><span id="bat-pct-2">--</span>%</div>
+              <div class="value" style="font-size:1.3rem;font-weight:700;"><span id="bat-pct-3">--</span>%</div>
               <div class="desc" id="bat-time">--</div>
+              <div class="quick-meta" style="margin-top:4px;"><span id="bat-status-text-3">--</span> · <span id="bat-power-2">--</span> W</div>
             </div>
           </div>
 
@@ -934,7 +1137,26 @@
       </div>
     </div>
     <nav class="mobile-tabs">
-      <a class="active" href="#">Overview</a><a href="#">CPU</a><a href="#">Memory</a><a href="#">Network</a><a href="#">More</a>
+      <a class="mobile-tab active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Overview
+      </a>
+      <a class="mobile-tab" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></svg>
+        CPU
+      </a>
+      <a class="mobile-tab" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h20v16H2z"/><path d="M6 8h2v2H6z"/><path d="M10 8h2v2h-2z"/><path d="M14 8h2v2h-2z"/><path d="M18 8h2v2h-2z"/><path d="M6 12h2v2H6z"/><path d="M10 12h2v2h-2z"/><path d="M14 12h2v2h-2z"/><path d="M18 12h2v2h-2z"/></svg>
+        Memory
+      </a>
+      <a class="mobile-tab" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        Network
+      </a>
+      <a class="mobile-tab" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        More
+      </a>
     </nav>
   </main>
 
@@ -956,9 +1178,10 @@
     }
 
 
-    var sparkState = { cpu: [], mem: [], gpu: [], bat: [], net: [], power: [] };
+    var sparkState = { cpu: [], mem: [], gpu: [], bat: [], net: [], power: [], netDown: [], netUp: [], gpuPanel: [] };
+    var sparkColors = { cpu:'#38bdf8', mem:'#a78bfa', gpu:'#22c55e', bat:'#14b8a6', net:'#38bdf8', power:'#f59e0b', netDown:'#38bdf8', netUp:'#a78bfa', gpuPanel:'#22c55e' };
 
-    function pushSpark(id, value, color) {
+    function pushSpark(id, value) {
       if (!(id in sparkState)) return;
       if (value === undefined || value === null || isNaN(value)) return;
       var arr = sparkState[id];
@@ -966,10 +1189,20 @@
       if (arr.length > 20) arr.shift();
       var el = document.getElementById('spark-' + id);
       if (!el) return;
+      var color = sparkColors[id] || '#94a3b8';
       el.innerHTML = arr.map(function(v){
         var h = Math.max(12, Math.round(v));
         return '<span style="height:' + h + '%;background:' + color + '"></span>';
       }).join('');
+    }
+
+    var lastUpdateTime = 0;
+    function fmtAgo(ms) {
+      var s = Math.floor(ms / 1000);
+      if (s < 5) return 'just now';
+      if (s < 60) return s + 's ago';
+      var m = Math.floor(s / 60);
+      return m + 'm ago';
     }
 
     var POLL_INTERVALS = { update: 2000, cores: 3000 };
@@ -1144,7 +1377,7 @@
         if (currCpu) window.prevCpuStat = currCpu;
 
         setText('cpu-pct', fmt(totalCpu));
-        pushSpark('cpu', totalCpu, '#38bdf8');
+        pushSpark('cpu', totalCpu);
         setText('cpu-pct-2', fmt(totalCpu));
         setText('cpu-bar-value', fmt(totalCpu) + '%');
         var bar = document.getElementById('cpu-bar');
@@ -1154,8 +1387,8 @@
 
       req('/api/system/loadavg', function(text) {
         var parts = text.trim().split(/\s+/);
-        var label = (parts[0] || '--') + ' load avg';
-        setText('cpu-cores-label', label);
+        var label = 'Load ' + (parts[0] || '--') + ' ' + (parts[1] || '--') + ' ' + (parts[2] || '--');
+        setText('cpu-load-meta', label);
         setText('cpu-cores-label-2', label);
       });
 
@@ -1165,6 +1398,7 @@
         if (host) {
           setText('hostname', host);
           setText('host-chip', host);
+          setText('host-chip-top', host);
         }
       });
 
@@ -1188,7 +1422,7 @@
         var swapPct = swapTotal > 0 ? (swapUsed * 100 / swapTotal) : 0;
 
         setText('mem-pct', fmt(memPct));
-        pushSpark('mem', memPct, '#a78bfa');
+        pushSpark('mem', memPct);
         setText('mem-info', fmtGB(used) + ' / ' + fmtGB(total));
         setText('mem-info-2', fmtGB(used) + ' / ' + fmtGB(total));
         document.getElementById('mem-bar').style.width = memPct + '%';
@@ -1208,10 +1442,11 @@
         var activityMeta = formatGpuActivityMeta(gpu);
 
         setHTML('gpu-freq', pctLabel.replace('%', '') + '<span class="metric-unit">%</span>');
-        pushSpark('gpu', pct, '#22c55e');
+        pushSpark('gpu', pct);
+        pushSpark('gpuPanel', pct);
         setText('gpu-freq-2', pctLabel + ' active');
         setText('gpu-model', gpu.name);
-        setText('gpu-util-label', activityMeta);
+        setText('gpu-util-label', gpu.name || 'GPU');
         setText('gpu-util-label-2', freqLabel);
         setText('gpu-bar-value', pctLabel);
         document.getElementById('gpu-bar').style.width = pct + '%';
@@ -1223,7 +1458,9 @@
         var rx = data.rx_bytes || 0;
         var tx = data.tx_bytes || 0;
         setText('net-down', fmt(rx / 1e6));
-        pushSpark('net', Math.min(100, (rx / 12.5e6) * 100), '#38bdf8');
+        pushSpark('net', Math.min(100, (rx / 12.5e6) * 100));
+        pushSpark('netDown', Math.min(100, (rx / 12.5e6) * 100));
+        pushSpark('netUp', Math.min(100, (tx / 12.5e6) * 100));
         setText('net-down-2', fmt(rx / 1e6));
         setText('net-up', fmt(tx / 1e6));
         var downLabel = fmt((rx * 8) / 1e6) + ' Mbps';
@@ -1241,27 +1478,25 @@
         var el = document.getElementById('temperatures');
         el.innerHTML = '';
         if (data && data.length) {
-          for (var i = 0; i < data.length; i++) {
+          var maxShow = Math.min(data.length, 8);
+          for (var i = 0; i < maxShow; i++) {
             var sensor = data[i];
-            var card = document.createElement('div');
-            card.className = 'mini';
+            var temp = sensor.value_c != null ? sensor.value_c : 0;
+            var name = sensor.label || sensor.source || ('Sensor ' + (i + 1));
+            var pct = Math.min(100, (temp / 100) * 100);
+            var grad;
+            if (temp >= 70) grad = 'linear-gradient(90deg, #f97316, #ef4444)';
+            else if (temp >= 55) grad = 'linear-gradient(90deg, #f59e0b, #f97316)';
+            else if (temp >= 40) grad = 'linear-gradient(90deg, #eab308, #f59e0b)';
+            else grad = 'linear-gradient(90deg, #22c55e, #10b981)';
 
-            var label = document.createElement('div');
-            label.className = 'k';
-            label.textContent = sensor.label || sensor.source || ('Sensor ' + (i + 1));
-
-            var value = document.createElement('div');
-            value.className = 'v';
-            value.textContent = (sensor.value_c != null ? sensor.value_c.toFixed(1) : '--') + ' °C';
-
-            var note = document.createElement('div');
-            note.className = 'quick-meta';
-            note.textContent = sensor.source || sensor.kind || '';
-
-            card.appendChild(label);
-            card.appendChild(value);
-            card.appendChild(note);
-            el.appendChild(card);
+            var row = document.createElement('div');
+            row.className = 'temp-row';
+            row.innerHTML =
+              '<div class="temp-label">' + name + '</div>' +
+              '<div class="temp-value">' + temp.toFixed(1) + ' °C</div>' +
+              '<div class="temp-bar-track"><div class="temp-bar-fill" style="width:' + pct + '%;background:' + grad + '"></div></div>';
+            el.appendChild(row);
           }
         }
       });
@@ -1321,7 +1556,7 @@
         if (data) {
           var pkgW = data.package || 0;
           setText('power-pkg', pkgW.toFixed(1));
-          pushSpark('power', Math.min(100, (pkgW / 30) * 100), '#f59e0b');
+          pushSpark('power', Math.min(100, (pkgW / 30) * 100));
           setText('power-pkg-2', pkgW.toFixed(1));
           var label = pkgW.toFixed(1) + ' W';
           setText('power-bar-label', label);
@@ -1335,25 +1570,28 @@
         if (data) {
           var pct = data.capacity || 0;
           setText('bat-pct', pct);
-          pushSpark('bat', pct, '#14b8a6');
+          pushSpark('bat', pct);
           setText('bat-pct-2', pct);
+          setText('bat-pct-3', pct);
           document.getElementById('bat-bar').style.width = pct + '%';
           setText('bat-bar-label', pct + '%');
 
-          var icon = '🔋';
-          if (data.ac_online) icon = '🔌';
-          if (data.status === 'Charging') icon = '⚡';
-          if (data.status === 'Full') icon = '✅';
-          setText('bat-icon', icon);
+          var gauge = document.getElementById('bat-gauge-fill');
+          var circum = 2 * Math.PI * 42;
+          var offset = circum - (pct / 100) * circum;
+          gauge.style.strokeDashoffset = offset;
+          gauge.style.stroke = pct < 20 ? '#ef4444' : pct < 50 ? '#f59e0b' : '#22c55e';
 
           setText('bat-status-text', data.status || '--');
           setText('bat-status-text-2', data.status || '--');
+          setText('bat-status-text-3', data.status || '--');
           setText('bat-voltage', ((data.voltage || 0) / 1e6).toFixed(2) + ' V');
           setText('bat-current', ((data.current || 0) / 1e6).toFixed(3) + ' A');
           setText('bat-cycles', data.cycle_count || 0);
 
           var powerW = data.power || 0;
           setText('bat-power', powerW.toFixed(1));
+          setText('bat-power-2', powerW.toFixed(1));
           setText('bat-status', data.ac_online ? 'Charging' : 'Discharging');
 
           if (data.time_remaining !== null) {
@@ -1371,9 +1609,10 @@
 
       var now = new Date();
       var stamp = now.toLocaleString('en-IN', { timeZone: 'Asia/Calcutta' });
+      lastUpdateTime = Date.now();
       setText('timestamp', 'Last updated · ' + stamp);
       setText('timestamp-inline', stamp.split(', ').slice(-1)[0] || stamp);
-      setText('last-updated-chip', 'Last updated: ' + (stamp.split(', ').slice(-1)[0] || stamp));
+      setText('last-updated-chip', 'Updated ' + fmtAgo(0));
     }
 
     function updateCores() {
@@ -1480,7 +1719,7 @@
       setText('refresh-status', 'Refresh: syncing...');
       update();
       updateCores();
-      setTimeout(function() { setText('refresh-status', 'Refresh: live'); }, 500);
+      setTimeout(function() { setText('refresh-status', 'Refresh: live'); }, 1000);
     });
     window.addEventListener('focus', function() {
       syncPollingState(true);
