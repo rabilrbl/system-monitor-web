@@ -82,6 +82,8 @@
     }
 
     .topbar-left,.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .topbar-brand{display:none;align-items:center;gap:8px;font-weight:800;letter-spacing:-.02em;color:var(--text);}
+    .topbar-brand svg{width:18px;height:18px;color:#38bdf8;}
     .chip{padding:5px 9px;border-radius:999px;border:1px solid var(--panel-border);font-size:.75rem;color:var(--muted);}
     .refresh-btn{border:1px solid var(--panel-border);background:rgba(56,189,248,.14);color:#bae6fd;border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer;}
     .refresh-btn:focus-visible{outline:2px solid #38bdf8;outline-offset:2px;}
@@ -135,12 +137,12 @@
     .topbar-action svg { width: 16px; height: 16px; }
 
     .hero {
-      padding: 18px;
-      border: 1px solid var(--panel-border);
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(9, 15, 28, 0.95));
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(16px);
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
     }
 
     .hero-top {
@@ -763,6 +765,11 @@
         background: rgba(255,255,255,0.03); color: var(--text); cursor: pointer;
       }
       .mobile-hamburger svg { width: 18px; height: 18px; }
+      .topbar-brand { display: inline-flex; }
+      .topbar { gap: 8px; padding: 9px 10px; }
+      .topbar-left { flex-wrap: nowrap; min-width: 0; }
+      .topbar-right { margin-left: auto; flex-wrap: nowrap; }
+      #uptime-chip, #last-updated-chip, #refresh-now { display: none; }
       .sidebar {
         position: fixed;
         display: flex;
@@ -786,7 +793,7 @@
       .search-chip, .server-selector .chip { display:none; }
       body{padding-bottom:84px;}
       .shell { padding: 12px 10px 24px; }
-      .hero { padding: 14px; border-radius: 24px; }
+      .hero { padding: 0; border-radius: 0; }
       .hero-top { flex-direction: column; align-items: flex-start; }
       .hero-side { text-align: left; min-width: 0; }
       .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -810,7 +817,7 @@
       .quick-card { min-height: 94px; padding: 12px; }
       .title { font-size: 1.85rem; }
       .panel, .quick-card { border-radius: 14px; }
-      .hero { border-radius: 16px; }
+      .hero { border-radius: 0; }
       .quick-value { font-size: 1.16rem; }
       .quick-meta { font-size: 0.7rem; }
       .core-item {
@@ -893,6 +900,10 @@
         <button class="mobile-hamburger" id="mobile-hamburger" type="button" title="Menu">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
+        <div class="topbar-brand">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>System Monitor Web</span>
+        </div>
         <div class="server-selector">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
           <span id="host-chip-top">homelab-server</span>
@@ -918,18 +929,6 @@
       </div>
     </header>
     <section class="hero">
-      <div class="hero-top">
-        <div>
-          <div class="eyebrow"><span class="pulse"></span> Live system telemetry</div>
-          <h1 class="title">System Monitor Web</h1>
-          <div class="subtext">A cleaner live view of performance, power, battery, and busiest processes, designed to be readable on mobile first.</div>
-        </div>
-        <div class="hero-side">
-          <strong id="hostname">Local host</strong>
-          <div id="uptime">Loading uptime...</div>
-        </div>
-      </div>
-
       <div class="quick-grid">
         <div class="quick-card" style="--quick-accent:#38bdf8">
           <div class="quick-card-header">
