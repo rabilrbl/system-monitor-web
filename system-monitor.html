@@ -848,24 +848,36 @@
     }
 
     @media (max-width: 780px) {
-      .mobile-tabs{position:fixed;left:8px;right:8px;bottom:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:25;background:rgba(7,17,31,.92);border:1px solid var(--panel-border);border-radius:14px;padding:8px;}
+      .mobile-tabs{position:fixed;left:8px;right:8px;bottom:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;z-index:25;background:rgba(7,17,31,.94);border:1px solid var(--panel-border);border-radius:16px;padding:7px;box-shadow:0 18px 45px rgba(0,0,0,.45);}
       .mobile-tab {
         display: flex; flex-direction: column; align-items: center; gap: 3px;
-        text-decoration: none; color: var(--muted); font-size: .65rem; text-align: center;
-        padding: 4px 2px; border-radius: 8px;
+        text-decoration: none; color: var(--muted); font-size: .64rem; text-align: center;
+        padding: 5px 2px; border-radius: 10px;
       }
-      .mobile-tab svg { width: 18px; height: 18px; }
-      .mobile-tab.active { color: #38bdf8; font-weight: 700; background: rgba(56,189,248,.1); }
+      .mobile-tab svg { width: 17px; height: 17px; }
+      .mobile-tab.active { color: #38bdf8; font-weight: 700; background: rgba(56,189,248,.11); }
       .mobile-hamburger {
         display: grid; width: 32px; height: 32px; place-items: center;
-        border: 1px solid var(--panel-border); border-radius: 8px;
-        background: rgba(255,255,255,0.03); color: var(--text); cursor: pointer;
+        border: 1px solid var(--panel-border); border-radius: 9px;
+        background: rgba(255,255,255,0.035); color: var(--text); cursor: pointer;
       }
       .mobile-hamburger svg { width: 18px; height: 18px; }
-      .topbar-brand { display: inline-flex; }
-      .topbar { gap: 8px; padding: 9px 10px; }
-      .topbar-left { flex-wrap: nowrap; min-width: 0; }
-      .topbar-right { margin-left: auto; flex-wrap: nowrap; }
+      .topbar {
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr) 32px;
+        grid-template-areas: "menu brand action" "server server server";
+        gap: 8px;
+        padding: 9px 10px;
+      }
+      .topbar-left,
+      .topbar-right { display: contents; }
+      .mobile-hamburger { grid-area: menu; }
+      .topbar-brand { grid-area: brand; display: inline-flex; justify-content: center; min-width: 0; font-size: .92rem; }
+      .topbar-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .topbar-action { grid-area: action; }
+      .server-selector { grid-area: server; justify-self: start; max-width: calc(100% - 72px); min-width: 0; }
+      .server-selector span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .os-chip { grid-area: server; justify-self: end; align-self: center; }
       #uptime-chip, #last-updated-chip, #refresh-now { display: none; }
       .sidebar {
         position: fixed;
@@ -888,11 +900,23 @@
       }
       .search-chip, .server-selector .chip { display:none; }
       body{padding-bottom:84px;}
-      .shell { padding: 12px 10px 24px; }
+      .shell { padding: 10px 8px 24px; }
       .hero { padding: 0; border-radius: 0; }
       .hero-top { flex-direction: column; align-items: flex-start; }
       .hero-side { text-align: left; min-width: 0; }
-      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .quick-card { min-height: 104px; padding: 10px; }
+      .quick-card-icon { width: 18px; height: 18px; }
+      .quick-card-header { gap: 6px; margin-bottom: 2px; }
+      .quick-label { font-size: .7rem; text-transform: none; letter-spacing: .01em; }
+      .quick-value { font-size: 1.08rem; line-height: 1.08; margin-top: 2px; }
+      .quick-meta { font-size: .68rem; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .quick-card .sparkline { height: 14px; gap: 2px; margin-top: 3px; }
+      .quick-card .sparkline span { min-width: 2px; }
+      .layout { gap: 10px; margin-top: 10px; }
+      .stack { gap: 10px; }
+      .panel { padding: 13px; }
+      .panel-head { margin-bottom: 12px; }
       .metric-row,
       .gpu-chip,
       .network-grid,
@@ -900,22 +924,36 @@
       .temperature-grid,
       .battery-chip,
       .proc-grid { grid-template-columns: 1fr; }
-      .cores { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; min-height: 144px; padding: 8px; }
-      .core-item { min-height: 122px; }
-      .core-track { width: 14px; min-height: 66px; }
+      .metric-box { padding: 11px; border-radius: 14px; }
+      .metric-box .value { font-size: 1.18rem; margin-top: 5px; }
+      .metric-box .desc { display: none; }
+      .history-chart { padding: 10px; margin: 10px 0; }
+      .history-chart svg { height: 96px; }
+      .cores { grid-template-columns: repeat(12, minmax(22px, 1fr)); gap: 5px; min-height: 112px; padding: 8px; overflow: hidden; }
+      .core-item { min-height: 92px; padding: 6px 3px; border-radius: 10px; gap: 5px; }
+      .core-track { width: 10px; min-height: 50px; }
+      .core-value { font-size: .55rem; }
+      .core-label { font-size: .58rem; letter-spacing: .03em; }
+      .temp-row { grid-template-columns: 1fr auto; gap: 8px; }
+      .temp-bar-track { grid-column: 1 / -1; }
+      .battery-gauge-wrap { gap: 12px; }
+      .battery-gauge { width: 80px; height: 80px; }
+      .battery-gauge svg { width: 80px; height: 80px; }
+      .proc-column { padding: 12px; border-radius: 14px; }
     }
 
     @media (max-width: 460px) {
-      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .quick-card { min-height: 94px; padding: 12px; }
+      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .quick-card { min-height: 102px; padding: 10px; }
       .title { font-size: 1.85rem; }
       .panel, .quick-card { border-radius: 14px; }
       .hero { border-radius: 0; }
-      .quick-value { font-size: 1.16rem; }
-      .quick-meta { font-size: 0.7rem; }
-      .cores { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-      .core-label { font-size: .64rem; }
-      .core-value { font-size: .68rem; }
+      .quick-value { font-size: 1.04rem; }
+      .quick-meta { font-size: 0.66rem; }
+      .metric-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .cores { grid-template-columns: repeat(12, minmax(21px, 1fr)); }
+      .core-label { font-size: .55rem; }
+      .core-value { font-size: .52rem; }
     }
   </style>
 </head>
@@ -1001,7 +1039,7 @@
           <span id="host-chip-top">homelab-server</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <span class="chip" style="background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(34,197,94,.2);">
+        <span class="chip os-chip" style="background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(34,197,94,.2);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:middle;margin-right:3px;"><path d="M12 2a10 10 0 0110 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
           Linux
         </span>
@@ -1150,17 +1188,17 @@
             <section class="proc-column">
               <h3 style="color:#c4b5fd">CPU</h3>
               <div class="proc-list" id="top-cpu"></div>
-              <a class="view-all" href="#" onclick="return false;">View all →</a>
+              <a class="view-all" href="#" data-view-all="cpu">View all →</a>
             </section>
             <section class="proc-column">
               <h3 style="color:#7dd3fc">Memory</h3>
               <div class="proc-list" id="top-mem"></div>
-              <a class="view-all" href="#" onclick="return false;">View all →</a>
+              <a class="view-all" href="#" data-view-all="mem">View all →</a>
             </section>
             <section class="proc-column">
               <h3 style="color:#86efac">Network interfaces</h3>
               <div class="proc-list" id="top-net"></div>
-              <a class="view-all" href="#" onclick="return false;">View all →</a>
+              <a class="view-all" href="#" data-view-all="net">View all →</a>
             </section>
           </div>
 
@@ -1169,7 +1207,7 @@
               <h3 style="color:#4ade80">Live network usage by process</h3>
               <div class="proc-subnote">Aggregated across each process's established connections. Showing executable path plus PID.</div>
               <div class="proc-list" id="bandwidth-procs"></div>
-              <a class="view-all" href="#" onclick="return false;">View all →</a>
+              <a class="view-all" href="#" data-view-all="bandwidth">View all →</a>
             </section>
           </div>
         </article>
@@ -1261,7 +1299,7 @@
           </div>
 
           <div class="temperature-grid" id="temperatures"></div>
-          <a class="view-all" href="#" onclick="return false;">View all sensors →</a>
+          <a class="view-all" href="#" data-view-all="temps">View all sensors →</a>
         </article>
 
         <article class="panel" id="power-section">
@@ -1382,6 +1420,9 @@
 
     var sparkState = { cpu: [], mem: [], gpu: [], bat: [], net: [], power: [], netDown: [], netUp: [], gpuPanel: [] };
     var sparkColors = { cpu:'#38bdf8', mem:'#a78bfa', gpu:'#22c55e', bat:'#14b8a6', net:'#38bdf8', power:'#f59e0b', netDown:'#38bdf8', netUp:'#a78bfa', gpuPanel:'#22c55e' };
+    var latestViews = { cpu: [], mem: [], net: [], bandwidth: [], temps: [] };
+    var expandedViews = { cpu: false, mem: false, net: false, bandwidth: false, temps: false };
+    var collapsedLimits = { cpu: 5, mem: 5, net: 5, bandwidth: 5, temps: 8 };
 
     function pushSpark(id, value) {
       if (!(id in sparkState)) return;
@@ -1575,6 +1616,60 @@
       return row;
     }
 
+    function shownItems(kind, data) {
+      var items = Array.isArray(data) ? data : [];
+      return expandedViews[kind] ? items : items.slice(0, collapsedLimits[kind] || 5);
+    }
+
+    function updateViewAllLink(kind, noun) {
+      var link = document.querySelector('[data-view-all="' + kind + '"]');
+      if (!link) return;
+      var total = (latestViews[kind] || []).length;
+      var limit = collapsedLimits[kind] || 5;
+      if (total <= limit) {
+        link.hidden = true;
+        return;
+      }
+      link.hidden = false;
+      link.textContent = expandedViews[kind] ? 'Show top ' + limit + ' ↑' : 'View all ' + total + ' ' + noun + ' →';
+    }
+
+    function renderProcList(kind, elementId, unit, mapper, noun) {
+      var el = document.getElementById(elementId);
+      if (!el) return;
+      el.innerHTML = '';
+      shownItems(kind, latestViews[kind]).forEach(function(item) {
+        var mapped = mapper(item);
+        el.appendChild(procRow(mapped.name, mapped.value, unit, mapped.opts));
+      });
+      updateViewAllLink(kind, noun);
+    }
+
+    function renderTemperatureRows() {
+      var el = document.getElementById('temperatures');
+      if (!el) return;
+      el.innerHTML = '';
+      shownItems('temps', latestViews.temps).forEach(function(sensor, i) {
+        var temp = sensor.value_c != null ? sensor.value_c : 0;
+        var name = sensor.label || sensor.source || ('Sensor ' + (i + 1));
+        var pct = Math.min(100, (temp / 100) * 100);
+        var grad;
+        if (temp >= 70) grad = 'linear-gradient(90deg, #f97316, #ef4444)';
+        else if (temp >= 55) grad = 'linear-gradient(90deg, #f59e0b, #f97316)';
+        else if (temp >= 40) grad = 'linear-gradient(90deg, #eab308, #f59e0b)';
+        else grad = 'linear-gradient(90deg, #22c55e, #10b981)';
+
+        var row = document.createElement('div');
+        row.className = 'temp-row';
+        row.innerHTML =
+          '<div class="temp-label">' + name + '</div>' +
+          '<div class="temp-value">' + temp.toFixed(1) + ' °C</div>' +
+          '<div class="temp-bar-track"><div class="temp-bar-fill" style="width:' + pct + '%;background:' + grad + '"></div></div>';
+        el.appendChild(row);
+      });
+      updateViewAllLink('temps', 'sensors');
+    }
+
     function update() {
       if (!isPageActive()) return;
       document.getElementById('error-banner').className = 'error-banner';
@@ -1628,12 +1723,6 @@
 
       req('/api/system/cpu_model', function(text) {
         setText('cpu-model', text.trim());
-        var host = text.trim().split(' @ ')[0].split(' CPU')[0];
-        if (host) {
-          setText('hostname', host);
-          setText('host-chip', host);
-          setText('host-chip-top', host);
-        }
       });
 
       req('/api/system/meminfo', function(text) {
@@ -1717,71 +1806,46 @@
       });
 
       reqJSON('/api/system/temperatures', function(data) {
-        var el = document.getElementById('temperatures');
-        el.innerHTML = '';
-        if (data && data.length) {
-          var maxShow = Math.min(data.length, 8);
-          for (var i = 0; i < maxShow; i++) {
-            var sensor = data[i];
-            var temp = sensor.value_c != null ? sensor.value_c : 0;
-            var name = sensor.label || sensor.source || ('Sensor ' + (i + 1));
-            var pct = Math.min(100, (temp / 100) * 100);
-            var grad;
-            if (temp >= 70) grad = 'linear-gradient(90deg, #f97316, #ef4444)';
-            else if (temp >= 55) grad = 'linear-gradient(90deg, #f59e0b, #f97316)';
-            else if (temp >= 40) grad = 'linear-gradient(90deg, #eab308, #f59e0b)';
-            else grad = 'linear-gradient(90deg, #22c55e, #10b981)';
-
-            var row = document.createElement('div');
-            row.className = 'temp-row';
-            row.innerHTML =
-              '<div class="temp-label">' + name + '</div>' +
-              '<div class="temp-value">' + temp.toFixed(1) + ' °C</div>' +
-              '<div class="temp-bar-track"><div class="temp-bar-fill" style="width:' + pct + '%;background:' + grad + '"></div></div>';
-            el.appendChild(row);
-          }
-        }
+        latestViews.temps = Array.isArray(data) ? data : [];
+        renderTemperatureRows();
       });
 
       reqJSON('/api/system/top_cpu', function(data) {
-        var el = document.getElementById('top-cpu');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < Math.min(data.length, 5); i++) el.appendChild(procRow(data[i].name, fmt(data[i].cpu), '%'));
-        }
+        latestViews.cpu = Array.isArray(data) ? data : [];
+        renderProcList('cpu', 'top-cpu', '%', function(item) {
+          return { name: item.name, value: fmt(item.cpu) };
+        }, 'processes');
       });
 
       reqJSON('/api/system/top_mem', function(data) {
-        var el = document.getElementById('top-mem');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < Math.min(data.length, 5); i++) el.appendChild(procRow(data[i].name, fmt(data[i].mem), '%'));
-        }
+        latestViews.mem = Array.isArray(data) ? data : [];
+        renderProcList('mem', 'top-mem', '%', function(item) {
+          return { name: item.name, value: fmt(item.mem) };
+        }, 'processes');
       });
 
       reqJSON('/api/system/top_net', function(data) {
-        var el = document.getElementById('top-net');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < Math.min(data.length, 5); i++) {
-            var item = data[i];
-            var val = '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0);
-            el.appendChild(procRow(item.name, val, ' Mbps'));
-          }
-        }
+        latestViews.net = Array.isArray(data) ? data : [];
+        renderProcList('net', 'top-net', ' Mbps', function(item) {
+          return {
+            name: item.name,
+            value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0)
+          };
+        }, 'interfaces');
       });
 
       reqJSON('/api/system/top_bandwidth', function(data) {
-        var el = document.getElementById('bandwidth-procs');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < Math.min(data.length, 5); i++) {
-            var item = data[i];
-            var val = '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0);
-            var meta = 'PID ' + (item.pid || '--') + ' · ' + ((item.connections || 0) === 1 ? '1 connection' : (item.connections || 0) + ' connections');
-            el.appendChild(procRow(item.command || item.name, val, ' Mbps', { meta: meta, wrapName: true }));
-          }
-        }
+        latestViews.bandwidth = Array.isArray(data) ? data : [];
+        renderProcList('bandwidth', 'bandwidth-procs', ' Mbps', function(item) {
+          return {
+            name: item.command || item.name,
+            value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0),
+            opts: {
+              meta: 'PID ' + (item.pid || '--') + ' · ' + ((item.connections || 0) === 1 ? '1 connection' : (item.connections || 0) + ' connections'),
+              wrapName: true
+            }
+          };
+        }, 'processes');
       });
 
       req('/api/system/uptime', function(text) {
@@ -2063,6 +2127,29 @@
         else openMobileSidebar();
       });
     }
+
+    document.querySelectorAll('[data-view-all]').forEach(function(link) {
+      link.addEventListener('click', function(event) {
+        event.preventDefault();
+        var kind = link.getAttribute('data-view-all');
+        if (!(kind in expandedViews)) return;
+        expandedViews[kind] = !expandedViews[kind];
+        if (kind === 'temps') renderTemperatureRows();
+        else if (kind === 'cpu') renderProcList('cpu', 'top-cpu', '%', function(item) { return { name: item.name, value: fmt(item.cpu) }; }, 'processes');
+        else if (kind === 'mem') renderProcList('mem', 'top-mem', '%', function(item) { return { name: item.name, value: fmt(item.mem) }; }, 'processes');
+        else if (kind === 'net') renderProcList('net', 'top-net', ' Mbps', function(item) { return { name: item.name, value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0) }; }, 'interfaces');
+        else if (kind === 'bandwidth') renderProcList('bandwidth', 'bandwidth-procs', ' Mbps', function(item) {
+          return {
+            name: item.command || item.name,
+            value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0),
+            opts: {
+              meta: 'PID ' + (item.pid || '--') + ' · ' + ((item.connections || 0) === 1 ? '1 connection' : (item.connections || 0) + ' connections'),
+              wrapName: true
+            }
+          };
+        }, 'processes');
+      });
+    });
 
     document.querySelectorAll('.nav-item, .mobile-tab').forEach(function(item) {
       item.addEventListener('click', function(event) {

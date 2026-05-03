@@ -521,7 +521,7 @@ fn get_top_cpu() -> Vec<TopCpuProcess> {
             Some(TopCpuProcess { name, cpu })
         })
         .collect::<Vec<_>>();
-    result.truncate(5);
+    result.truncate(20);
     result
 }
 
@@ -545,7 +545,7 @@ fn get_top_mem() -> Vec<TopMemProcess> {
             Some(TopMemProcess { name, mem })
         })
         .collect::<Vec<_>>();
-    result.truncate(5);
+    result.truncate(20);
     result
 }
 
@@ -654,7 +654,7 @@ fn get_top_net(ctx: &Arc<AppContext>) -> Vec<TopNetInterface> {
             .partial_cmp(&(a.rx_mbps + a.tx_mbps))
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    result.truncate(5);
+    result.truncate(20);
     result
 }
 
@@ -1216,7 +1216,7 @@ fn get_top_bandwidth_processes(ctx: &Arc<AppContext>) -> Vec<TopBandwidthProcess
             .partial_cmp(&a.total_mbps)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    result.truncate(5);
+    result.truncate(20);
     result
 }
 
