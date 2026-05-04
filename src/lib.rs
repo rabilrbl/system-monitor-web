@@ -53,6 +53,8 @@ struct CpuTimes {
     system: u64,
     idle: u64,
     iowait: u64,
+    irq: u64,
+    softirq: u64,
 }
 
 impl CpuTimes {
@@ -60,6 +62,8 @@ impl CpuTimes {
         self.user
             .saturating_add(self.nice)
             .saturating_add(self.system)
+            .saturating_add(self.irq)
+            .saturating_add(self.softirq)
     }
 
     fn total(self) -> u64 {
@@ -360,6 +364,8 @@ fn parse_cpu_total_from_stat(content: &str) -> Option<CpuTimes> {
             system: parts.next().and_then(|x| x.parse().ok()).unwrap_or(0),
             idle: parts.next().and_then(|x| x.parse().ok()).unwrap_or(0),
             iowait: parts.next().and_then(|x| x.parse().ok()).unwrap_or(0),
+            irq: parts.next().and_then(|x| x.parse().ok()).unwrap_or(0),
+            softirq: parts.next().and_then(|x| x.parse().ok()).unwrap_or(0),
         });
     }
     None
@@ -377,10 +383,10 @@ fn parse_core_times_from_stat(content: &str) -> HashMap<String, CpuTimes> {
         }
 
         let values = pieces
-            .take(5)
+            .take(7)
             .map(|v| v.parse::<u64>().unwrap_or(0))
             .collect::<Vec<_>>();
-        if values.len() < 5 {
+        if values.len() < 7 {
             continue;
         }
 
@@ -392,6 +398,8 @@ fn parse_core_times_from_stat(content: &str) -> HashMap<String, CpuTimes> {
                 system: values[2],
                 idle: values[3],
                 iowait: values[4],
+                irq: values[5],
+                softirq: values[6],
             },
         );
     }

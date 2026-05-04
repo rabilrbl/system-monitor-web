@@ -466,7 +466,7 @@
       height: 0%;
       border-radius: inherit;
       transition: height 0.35s ease, background 0.25s ease;
-      min-height: 4px;
+      min-height: 1px;
     }
 
     .history-chart {
@@ -2137,7 +2137,7 @@
 
           var fill = document.createElement('div');
           fill.className = 'core-fill';
-          fill.style.height = Math.max(4, Math.min(100, pct)) + '%';
+          fill.style.height = Math.max(1, Math.min(100, pct)) + '%';
           fill.style.background = 'linear-gradient(180deg, #38bdf8, #2563eb)';
 
           var name = document.createElement('span');
