@@ -845,10 +845,15 @@ fn power_supply_watts_from_values(
     voltage_min: i64,
     current_now: i64,
     current_max: i64,
+    allow_derived_power: bool,
 ) -> Option<f64> {
     let direct_power = power_now.abs();
     if direct_power > 0 {
         return Some(direct_power as f64 / 1e6);
+    }
+
+    if !allow_derived_power {
+        return None;
     }
 
     let voltage = [voltage_now, voltage_max, voltage_min]
@@ -876,7 +881,12 @@ fn read_power_supply_watts(base: &str) -> Option<f64> {
         read_i64(&format!("{base}/voltage_min")),
         read_i64(&format!("{base}/current_now")),
         read_i64(&format!("{base}/current_max")),
+        true,
     )
+}
+
+fn read_power_supply_direct_watts(base: &str) -> Option<f64> {
+    power_supply_watts_from_values(read_i64(&format!("{base}/power_now")), 0, 0, 0, 0, 0, false)
 }
 
 fn get_online_external_power_watts() -> Option<f64> {
@@ -888,7 +898,7 @@ fn get_online_external_power_watts() -> Option<f64> {
         if supply_type == "Battery" || read_i64(&format!("{base}/online")) != 1 {
             return None;
         }
-        read_power_supply_watts(&base)
+        read_power_supply_direct_watts(&base)
     })
 }
 
@@ -1368,27 +1378,35 @@ mod tests {
     #[test]
     fn power_supply_watts_prefers_direct_power_now() {
         assert_eq!(
-            power_supply_watts_from_values(12_345_000, 0, 0, 0, 0, 0),
+            power_supply_watts_from_values(12_345_000, 0, 0, 0, 0, 0, true),
             Some(12.345)
         );
     }
 
     #[test]
-    fn power_supply_watts_falls_back_to_usb_voltage_and_current() {
+    fn power_supply_watts_can_derive_battery_voltage_and_current() {
         assert_eq!(
-            power_supply_watts_from_values(0, 0, 5_000_000, 0, 3_250_000, 3_000_000),
+            power_supply_watts_from_values(0, 0, 5_000_000, 0, 3_250_000, 3_000_000, true),
             Some(16.25)
+        );
+    }
+
+    #[test]
+    fn power_supply_watts_does_not_derive_external_supply_limits() {
+        assert_eq!(
+            power_supply_watts_from_values(0, 0, 5_000_000, 0, 3_250_000, 3_000_000, false),
+            None
         );
     }
 
     #[test]
     fn power_supply_watts_returns_none_without_voltage_or_current() {
         assert_eq!(
-            power_supply_watts_from_values(0, 0, 0, 0, 3_000_000, 0),
+            power_supply_watts_from_values(0, 0, 0, 0, 3_000_000, 0, true),
             None
         );
         assert_eq!(
-            power_supply_watts_from_values(0, 5_000_000, 0, 0, 0, 0),
+            power_supply_watts_from_values(0, 5_000_000, 0, 0, 0, 0, true),
             None
         );
     }
