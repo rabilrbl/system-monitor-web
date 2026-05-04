@@ -669,6 +669,7 @@
       line-height: 1.35;
       overflow-wrap: anywhere;
     }
+    .modal-info-card-wide { grid-column: 1 / -1; }
     .modal-action-row {
       display: flex;
       flex-wrap: wrap;
@@ -1088,8 +1089,18 @@
       .chart-modal-legend { margin: 12px; }
       .chart-modal-content { padding: 12px 12px max(16px, env(safe-area-inset-bottom)); gap: 12px; }
       .modal-card-grid { grid-template-columns: 1fr; gap: 9px; }
-      .modal-info-card { min-height: 72px; padding: 12px; border-radius: 14px; }
-      .modal-info-card strong { font-size: .9rem; }
+      .modal-info-card {
+        min-height: 58px;
+        display: grid;
+        grid-template-columns: minmax(82px, .34fr) minmax(0, 1fr);
+        align-items: center;
+        justify-content: initial;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 14px;
+      }
+      .modal-info-card strong { font-size: .88rem; text-align: right; }
+      .modal-info-card span { font-size: .63rem; line-height: 1.2; }
       .modal-action-row {
         position: sticky;
         bottom: 0;
@@ -2262,8 +2273,9 @@
       });
     }
 
-    function modalCard(label, value) {
-      return '<div class="modal-info-card"><span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(value) + '</strong></div>';
+    function modalCard(label, value, modifier) {
+      var cls = 'modal-info-card' + (modifier ? ' ' + modifier : '');
+      return '<div class="' + cls + '"><span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(value) + '</strong></div>';
     }
 
     function modalButton(label, nav) {
@@ -2290,9 +2302,8 @@
       var net = latestViews.network ? '↓ ' + fmt((latestViews.network.rx_bytes || 0) / 1e6) + ' MB/s · ↑ ' + fmt((latestViews.network.tx_bytes || 0) / 1e6) + ' MB/s' : '--';
       var pkg = latestViews.power && latestViews.power.package != null ? Number(latestViews.power.package).toFixed(1) + ' W' : '--';
       var bat = latestViews.battery && latestViews.battery.capacity != null ? latestViews.battery.capacity + '% · ' + (latestViews.battery.status || '--') : '--';
-      var cards = '<div class="modal-card-grid">' +
-        modalCard('Server', latestViews.hostname || (document.getElementById('host-chip-top') ? document.getElementById('host-chip-top').textContent : 'localhost')) +
-        modalCard('OS', 'Linux') + modalCard('Uptime', latestViews.uptime || '--') + modalCard('Updated', lastUpdateTime ? fmtAgo(Date.now() - lastUpdateTime) : '--') + '</div>';
+      var loadAvg = latestViews.loadavg ? latestViews.loadavg.replace(/^Load\s*/i, '').trim().replace(/\s+/g, ' · ') : '--';
+      var hostName = latestViews.hostname || (document.getElementById('host-chip-top') ? document.getElementById('host-chip-top').textContent : 'localhost');
       var actions = '<div class="modal-action-row">' + modalButton('Overview', 'overview') + modalButton('CPU', 'cpu') + modalButton('Memory', 'memory') + modalButton('Network', 'network') + modalButton('Sensors', 'sensors') + modalButton('Power', 'power') + '</div>';
 
       if (kind === 'alerts') {
@@ -2307,7 +2318,14 @@
         return { title: 'Settings', subtitle: 'Dashboard controls', html: '<div class="modal-card-grid">' + modalCard('Refresh cadence', 'Telemetry 2s · cores 3s') + modalCard('Timezone', 'Asia/Calcutta') + modalCard('Charts', 'Expanded CPU and network history') + modalCard('Keyboard', 'Esc closes dialogs') + '</div><div class="modal-action-row"><button class="modal-action-btn" type="button" data-modal-action="refresh">Refresh now</button>' + modalChartButton('CPU graph', 'cpu') + modalChartButton('Network graph', 'network') + '</div>' };
       }
       if (kind === 'system' || kind === 'server') {
-        return { title: 'System', subtitle: latestViews.cpuModel || 'Host details', html: cards + '<div class="modal-card-grid">' + modalCard('CPU', cpu) + modalCard('Memory', mem) + modalCard('Network', net) + modalCard('Package power', pkg) + modalCard('Battery', bat) + modalCard('Load', latestViews.loadavg || '--') + '</div>' + actions };
+        return {
+          title: 'System',
+          subtitle: 'Host details and live telemetry',
+          html: '<div class="modal-card-grid">' +
+            modalCard('Server', hostName) + modalCard('OS', 'Linux') + modalCard('Uptime', latestViews.uptime || '--') + modalCard('Updated', lastUpdateTime ? fmtAgo(Date.now() - lastUpdateTime) : '--') +
+            modalCard('CPU model', latestViews.cpuModel || '--', 'modal-info-card-wide') + modalCard('CPU', cpu) + modalCard('Memory', mem) + modalCard('Network', net, 'modal-info-card-wide') +
+            modalCard('Package power', pkg) + modalCard('Battery', bat) + modalCard('Load average', loadAvg, 'modal-info-card-wide') + '</div>' + actions
+        };
       }
       var titles = { disks: 'Disks', services: 'Services', logs: 'Logs' };
       var copy = {
