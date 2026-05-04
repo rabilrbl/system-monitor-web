@@ -838,6 +838,60 @@ fn pick_ac_base() -> Option<String> {
     None
 }
 
+fn power_supply_watts_from_values(
+    power_now: i64,
+    voltage_now: i64,
+    voltage_max: i64,
+    voltage_min: i64,
+    current_now: i64,
+    current_max: i64,
+) -> Option<f64> {
+    let direct_power = power_now.abs();
+    if direct_power > 0 {
+        return Some(direct_power as f64 / 1e6);
+    }
+
+    let voltage = [voltage_now, voltage_max, voltage_min]
+        .into_iter()
+        .find(|value| *value > 0)
+        .unwrap_or(0);
+    let current = [current_now, current_max]
+        .into_iter()
+        .find(|value| value.abs() > 0)
+        .unwrap_or(0)
+        .abs();
+
+    if voltage > 0 && current > 0 {
+        Some((voltage as f64) * (current as f64) / 1e12)
+    } else {
+        None
+    }
+}
+
+fn read_power_supply_watts(base: &str) -> Option<f64> {
+    power_supply_watts_from_values(
+        read_i64(&format!("{base}/power_now")),
+        read_i64(&format!("{base}/voltage_now")),
+        read_i64(&format!("{base}/voltage_max")),
+        read_i64(&format!("{base}/voltage_min")),
+        read_i64(&format!("{base}/current_now")),
+        read_i64(&format!("{base}/current_max")),
+    )
+}
+
+fn get_online_external_power_watts() -> Option<f64> {
+    let entries = fs::read_dir("/sys/class/power_supply").ok()?;
+    entries.flatten().find_map(|entry| {
+        let base = entry.path();
+        let base = base.to_string_lossy();
+        let supply_type = read_text_file(&format!("{base}/type")).trim().to_string();
+        if supply_type == "Battery" || read_i64(&format!("{base}/online")) != 1 {
+            return None;
+        }
+        read_power_supply_watts(&base)
+    })
+}
+
 fn get_battery() -> BatteryStats {
     let mut result = BatteryStats {
         status: "Unknown".to_string(),
@@ -881,7 +935,13 @@ fn get_battery() -> BatteryStats {
         result.ac_online = read_i64(&format!("{ac}/online")) == 1;
     }
 
-    result.power = (result.voltage as f64) * (result.current as f64) / 1e12;
+    result.power = read_power_supply_watts(&base)
+        .unwrap_or_else(|| (result.voltage as f64) * (result.current as f64) / 1e12);
+    if result.power <= 0.05 && result.ac_online {
+        if let Some(external_power) = get_online_external_power_watts() {
+            result.power = external_power;
+        }
+    }
 
     if result.current > 1000 {
         if result.status == "Discharging" {
@@ -1303,6 +1363,34 @@ mod tests {
         assert_eq!(parsed.len(), 2);
         assert_eq!(parsed.get("wlan0"), Some(&(200, 300)));
         assert_eq!(parsed.get("lo"), Some(&(50, 60)));
+    }
+
+    #[test]
+    fn power_supply_watts_prefers_direct_power_now() {
+        assert_eq!(
+            power_supply_watts_from_values(12_345_000, 0, 0, 0, 0, 0),
+            Some(12.345)
+        );
+    }
+
+    #[test]
+    fn power_supply_watts_falls_back_to_usb_voltage_and_current() {
+        assert_eq!(
+            power_supply_watts_from_values(0, 0, 5_000_000, 0, 3_250_000, 3_000_000),
+            Some(16.25)
+        );
+    }
+
+    #[test]
+    fn power_supply_watts_returns_none_without_voltage_or_current() {
+        assert_eq!(
+            power_supply_watts_from_values(0, 0, 0, 0, 3_000_000, 0),
+            None
+        );
+        assert_eq!(
+            power_supply_watts_from_values(0, 5_000_000, 0, 0, 0, 0),
+            None
+        );
     }
 
     #[test]

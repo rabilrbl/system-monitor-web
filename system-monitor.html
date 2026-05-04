@@ -115,20 +115,6 @@
       cursor: pointer;
     }
     .server-selector svg { width: 14px; height: 14px; color: var(--muted); }
-    .search-chip {
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 10px; border-radius: 10px;
-      border: 1px solid var(--panel-border);
-      background: rgba(255,255,255,0.03);
-      font-size: 0.75rem; color: var(--muted);
-      cursor: pointer; min-width: 180px;
-    }
-    .search-chip svg { width: 14px; height: 14px; }
-    .search-chip kbd {
-      margin-left: auto; padding: 2px 5px; border-radius: 4px;
-      background: rgba(255,255,255,0.08); font-size: 0.65rem;
-      font-family: JetBrains Mono, monospace; color: var(--muted-2);
-    }
     .topbar-action {
       display: grid; place-items: center;
       width: 32px; height: 32px; border-radius: 8px;
@@ -901,7 +887,7 @@
         background: rgba(2, 6, 23, .48);
         pointer-events: none;
       }
-      .search-chip, .server-selector .chip { display:none; }
+      .server-selector .chip { display:none; }
       body{padding-bottom:84px;}
       .shell { padding: 10px 8px 24px; }
       .hero { padding: 0; border-radius: 0; }
@@ -1049,11 +1035,6 @@
         <span class="chip" id="uptime-chip">Uptime: --</span>
       </div>
       <div class="topbar-right">
-        <span class="search-chip" id="search-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Search (/) or quick action...
-          <kbd>⌘K</kbd>
-        </span>
         <span class="chip" id="last-updated-chip">Updated -- ago</span>
         <button class="topbar-action" id="settings-button" title="Settings" type="button" aria-label="Open settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -1331,7 +1312,7 @@
               <div class="v"><span id="power-pkg-2">--</span> W</div>
             </div>
             <div class="mini">
-              <div class="k">Battery draw</div>
+              <div class="k" id="bat-power-label">Battery draw</div>
               <div class="v"><span id="bat-power">--</span> W</div>
             </div>
           </div>
@@ -1351,7 +1332,6 @@
             <div class="mini"><div class="k">Voltage</div><div class="v" id="bat-voltage">--</div></div>
             <div class="mini"><div class="k">Current</div><div class="v" id="bat-current">--</div></div>
             <div class="mini"><div class="k">Cycles</div><div class="v" id="bat-cycles">--</div></div>
-            <div class="mini"><div class="k">Updated</div><div class="v" id="timestamp-inline">--</div></div>
           </div>
         </article>
       </div>
@@ -1911,9 +1891,13 @@
           setText('bat-cycles', data.cycle_count || 0);
 
           var powerW = data.power || 0;
+          var powerLabel = 'Battery draw';
+          if (data.ac_online && (data.current || 0) <= 1000 && powerW > 0.05) powerLabel = 'Live draw';
+          else if (data.status === 'Charging') powerLabel = 'Charge draw';
+          setText('bat-power-label', powerLabel);
           setText('bat-power', powerW.toFixed(1));
           setText('bat-power-2', powerW.toFixed(1));
-          setText('bat-status', data.ac_online ? 'Charging' : 'Discharging');
+          setText('bat-status', data.ac_online ? 'Plugged in' : 'Discharging');
 
           if (data.time_remaining !== null) {
             var mins = data.time_remaining;
@@ -1932,7 +1916,6 @@
       var stamp = now.toLocaleString('en-IN', { timeZone: 'Asia/Calcutta' });
       lastUpdateTime = Date.now();
       setText('timestamp', 'Last updated · ' + stamp);
-      setText('timestamp-inline', stamp.split(', ').slice(-1)[0] || stamp);
       setText('last-updated-chip', 'Updated just now');
       refreshRelativeTimestamp();
     }
@@ -2146,9 +2129,6 @@
       if (kind === 'system' || kind === 'server') {
         return { title: 'System', subtitle: latestViews.cpuModel || 'Host details', html: cards + '<div class="modal-card-grid">' + modalCard('CPU', cpu) + modalCard('Memory', mem) + modalCard('Network', net) + modalCard('Package power', pkg) + modalCard('Battery', bat) + modalCard('Load', latestViews.loadavg || '--') + '</div>' + actions };
       }
-      if (kind === 'search') {
-        return { title: 'Quick action', subtitle: 'Jump to a dashboard section', html: actions };
-      }
       var titles = { disks: 'Disks', services: 'Services', logs: 'Logs' };
       var copy = {
         disks: 'Disk telemetry is not exposed by the current backend routes yet. Existing storage-adjacent telemetry is still available through System and Sensors.',
@@ -2309,8 +2289,6 @@
         if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openInfoModal('server'); }
       });
     }
-    var searchChip = document.getElementById('search-chip');
-    if (searchChip) searchChip.addEventListener('click', function() { openInfoModal('search'); });
 
     document.querySelectorAll('.history-chart[data-chart]').forEach(function(chart) {
       chart.addEventListener('click', function() { openChartModal(chart.getAttribute('data-chart')); });
