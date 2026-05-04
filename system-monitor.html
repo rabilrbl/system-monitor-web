@@ -735,7 +735,7 @@
 
     .proc-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
     }
 
@@ -1189,12 +1189,12 @@
 
           <div class="proc-grid">
             <section class="proc-column">
-              <h3 style="color:#c4b5fd">CPU</h3>
+              <h3 style="color:#c4b5fd">Top CPU</h3>
               <div class="proc-list" id="top-cpu"></div>
               <a class="view-all" href="#" data-view-all="cpu">View all →</a>
             </section>
             <section class="proc-column">
-              <h3 style="color:#7dd3fc">Memory</h3>
+              <h3 style="color:#7dd3fc">Top Memory</h3>
               <div class="proc-list" id="top-mem"></div>
               <a class="view-all" href="#" data-view-all="mem">View all →</a>
             </section>
@@ -1203,12 +1203,8 @@
               <div class="proc-list" id="top-net"></div>
               <a class="view-all" href="#" data-view-all="net">View all →</a>
             </section>
-          </div>
-
-          <div class="proc-grid single-column">
             <section class="proc-column">
-              <h3 style="color:#4ade80">Live network usage by process</h3>
-              <div class="proc-subnote">Aggregated across each process's established connections. Showing executable path plus PID.</div>
+              <h3 style="color:#4ade80">Network by process</h3>
               <div class="proc-list" id="bandwidth-procs"></div>
               <a class="view-all" href="#" data-view-all="bandwidth">View all →</a>
             </section>
@@ -1858,12 +1854,8 @@
         latestViews.bandwidth = Array.isArray(data) ? data : [];
         renderProcList('bandwidth', 'bandwidth-procs', ' Mbps', function(item) {
           return {
-            name: item.command || item.name,
-            value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0),
-            opts: {
-              meta: 'PID ' + (item.pid || '--') + ' · ' + ((item.connections || 0) === 1 ? '1 connection' : (item.connections || 0) + ' connections'),
-              wrapName: true
-            }
+            name: item.name || item.command || 'process',
+            value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0)
           };
         }, 'processes');
       });
