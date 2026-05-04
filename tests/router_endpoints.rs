@@ -159,3 +159,35 @@ async fn stat_endpoint_returns_text_plain_with_proc_stat_content() {
     let body = response_text(response).await;
     assert!(body.contains("cpu"), "expected /proc/stat style content");
 }
+
+#[tokio::test]
+async fn hostname_endpoint_returns_text_plain_hostname() {
+    let response = app()
+        .oneshot(
+            Request::builder()
+                .uri("/api/system/hostname")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let content_type = response
+        .headers()
+        .get(header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or_default();
+    assert!(content_type.starts_with("text/plain"));
+
+    let body = response_text(response).await;
+    assert!(!body.trim().is_empty(), "hostname should not be empty");
+
+    if let Ok(expected) = std::fs::read_to_string("/proc/sys/kernel/hostname") {
+        let expected = expected.trim();
+        if !expected.is_empty() {
+            assert_eq!(body.trim(), expected);
+        }
+    }
+}

@@ -1039,7 +1039,7 @@
         </div>
         <div class="server-selector" id="server-selector" role="button" tabindex="0" title="Server details">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-          <span id="host-chip-top">homelab-server</span>
+          <span id="host-chip-top">hostname</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <span class="chip os-chip">
@@ -1423,7 +1423,7 @@
 
     var sparkState = { cpu: [], mem: [], gpu: [], bat: [], net: [], power: [], netDown: [], netUp: [], gpuPanel: [] };
     var sparkColors = { cpu:'#38bdf8', mem:'#a78bfa', gpu:'#22c55e', bat:'#14b8a6', net:'#38bdf8', power:'#f59e0b', netDown:'#38bdf8', netUp:'#a78bfa', gpuPanel:'#22c55e' };
-    var latestViews = { cpu: [], mem: [], net: [], bandwidth: [], temps: [], cpuPct: null, memPct: null, gpu: null, network: null, power: null, battery: null, uptime: '--', cpuModel: '--' };
+    var latestViews = { cpu: [], mem: [], net: [], bandwidth: [], temps: [], cpuPct: null, memPct: null, gpu: null, network: null, power: null, battery: null, uptime: '--', cpuModel: '--', hostname: 'hostname' };
     var expandedViews = { cpu: false, mem: false, net: false, bandwidth: false, temps: false };
     var collapsedLimits = { cpu: 5, mem: 5, net: 5, bandwidth: 5, temps: 8 };
 
@@ -1541,6 +1541,12 @@
           showError('Fetch failed: ' + url + ' - ' + e.message);
           console.error('fetch error for ' + url, e);
         });
+    }
+
+    function setHostname(value) {
+      var hostname = String(value || '').trim() || 'localhost';
+      latestViews.hostname = hostname;
+      setText('host-chip-top', hostname);
     }
 
     function fmt(n) {
@@ -1724,6 +1730,10 @@
         setText('cpu-load-meta', label);
         setText('cpu-cores-label-2', label);
         latestViews.loadavg = label;
+      });
+
+      req('/api/system/hostname', function(text) {
+        setHostname(text);
       });
 
       req('/api/system/cpu_model', function(text) {
@@ -2126,7 +2136,7 @@
       var pkg = latestViews.power && latestViews.power.package != null ? Number(latestViews.power.package).toFixed(1) + ' W' : '--';
       var bat = latestViews.battery && latestViews.battery.capacity != null ? latestViews.battery.capacity + '% · ' + (latestViews.battery.status || '--') : '--';
       var cards = '<div class="modal-card-grid">' +
-        modalCard('Server', document.getElementById('host-chip-top') ? document.getElementById('host-chip-top').textContent : 'homelab-server') +
+        modalCard('Server', latestViews.hostname || (document.getElementById('host-chip-top') ? document.getElementById('host-chip-top').textContent : 'localhost')) +
         modalCard('OS', 'Linux') + modalCard('Uptime', latestViews.uptime || '--') + modalCard('Updated', lastUpdateTime ? fmtAgo(Date.now() - lastUpdateTime) : '--') + '</div>';
       var actions = '<div class="modal-action-row">' + modalButton('Overview', 'overview') + modalButton('CPU', 'cpu') + modalButton('Memory', 'memory') + modalButton('Network', 'network') + modalButton('Sensors', 'sensors') + modalButton('Power', 'power') + '</div>';
 

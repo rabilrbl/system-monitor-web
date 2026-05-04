@@ -158,6 +158,7 @@ pub fn build_router(ctx: Arc<AppContext>) -> Router {
         .route("/api/system/stat", get(api_stat))
         .route("/api/system/meminfo", get(api_meminfo))
         .route("/api/system/memtotal", get(api_meminfo))
+        .route("/api/system/hostname", get(api_hostname))
         .route("/api/system/cpu_model", get(api_cpu_model))
         .route("/api/system/gpu", get(api_gpu))
         .route("/api/system/intel_gpu", get(api_intel_gpu))
@@ -191,6 +192,10 @@ async fn api_stat() -> Response {
 
 async fn api_meminfo() -> Response {
     text_response(StatusCode::OK, read_text_file("/proc/meminfo"))
+}
+
+async fn api_hostname() -> Response {
+    text_response(StatusCode::OK, get_hostname())
 }
 
 async fn api_cpu_model() -> Response {
@@ -306,6 +311,19 @@ fn add_cache_headers(mut response: Response) -> Response {
 
 fn read_text_file(path: &str) -> String {
     fs::read_to_string(path).unwrap_or_default()
+}
+
+fn get_hostname() -> String {
+    fs::read_to_string("/proc/sys/kernel/hostname")
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .or_else(|| {
+            std::env::var("HOSTNAME")
+                .ok()
+                .filter(|value| !value.is_empty())
+        })
+        .unwrap_or_else(|| "localhost".to_string())
 }
 
 fn read_number(path: &str) -> Option<f64> {
