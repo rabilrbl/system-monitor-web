@@ -88,6 +88,8 @@ struct IntelGpuSample {
 struct RaplSample {
     pkg: u64,
     core: u64,
+    uncore: u64,
+    total: u64,
     at: Instant,
 }
 
@@ -337,6 +339,13 @@ fn read_number(path: &str) -> Option<f64> {
 
 fn read_i64(path: &str) -> i64 {
     read_text_file(path).trim().parse::<i64>().unwrap_or(0)
+}
+
+fn first_existing_path(paths: &[&str]) -> Option<String> {
+    paths
+        .iter()
+        .find(|path| Path::new(path).exists())
+        .map(|path| (*path).to_string())
 }
 
 fn parse_cpu_total_from_stat(content: &str) -> Option<CpuTimes> {
@@ -974,23 +983,38 @@ fn get_power(ctx: &Arc<AppContext>) -> PowerStats {
         total: 0.0,
     };
 
-    let pkg_path = "/sys/class/powercap/intel-rapl:0:0/energy_uj";
-    let core_path = "/sys/class/powercap/intel-rapl:0:0/intel-rapl:0:1/energy_uj";
+    let pkg_path = first_existing_path(&[
+        "/sys/class/powercap/intel-rapl:0/energy_uj",
+        "/sys/class/powercap/intel-rapl-mmio:0/energy_uj",
+    ]);
+    let core_path = first_existing_path(&[
+        "/sys/class/powercap/intel-rapl:0:0/energy_uj",
+        "/sys/class/powercap/intel-rapl-mmio:0:0/energy_uj",
+    ]);
+    let uncore_path = first_existing_path(&[
+        "/sys/class/powercap/intel-rapl:0:1/energy_uj",
+        "/sys/class/powercap/intel-rapl-mmio:0:1/energy_uj",
+    ]);
+    let total_path = first_existing_path(&[
+        "/sys/class/powercap/intel-rapl:1/energy_uj",
+        "/sys/class/powercap/intel-rapl-mmio:1/energy_uj",
+    ]);
 
-    let pkg_energy = read_i64(pkg_path);
-    if pkg_energy <= 0 {
+    let pkg_energy = pkg_path.as_deref().map(read_i64).unwrap_or(0).max(0) as u64;
+    let core_energy = core_path.as_deref().map(read_i64).unwrap_or(0).max(0) as u64;
+    let uncore_energy = uncore_path.as_deref().map(read_i64).unwrap_or(0).max(0) as u64;
+    let total_energy = total_path.as_deref().map(read_i64).unwrap_or(0).max(0) as u64;
+    if pkg_energy == 0 && total_energy == 0 {
         return result;
     }
-    let core_energy = read_i64(core_path).max(0);
 
-    let pkg_now = pkg_energy as u64;
-    let core_now = core_energy as u64;
     let now = Instant::now();
-
     let mut telemetry = ctx.telemetry.lock().expect("telemetry mutex poisoned");
     let Some(prev) = telemetry.rapl_prev.replace(RaplSample {
-        pkg: pkg_now,
-        core: core_now,
+        pkg: pkg_energy,
+        core: core_energy,
+        uncore: uncore_energy,
+        total: total_energy,
         at: now,
     }) else {
         return result;
@@ -1002,23 +1026,27 @@ fn get_power(ctx: &Arc<AppContext>) -> PowerStats {
     }
 
     let max_energy = 0xFFFF_FFFFu64;
-    let pkg_delta = if pkg_now >= prev.pkg {
-        pkg_now - prev.pkg
-    } else {
-        max_energy.saturating_sub(prev.pkg).saturating_add(pkg_now)
+    let delta = |current: u64, previous: u64| {
+        if current >= previous {
+            current - previous
+        } else {
+            max_energy.saturating_sub(previous).saturating_add(current)
+        }
     };
 
-    let core_delta = if core_now >= prev.core {
-        core_now - prev.core
-    } else {
-        max_energy
-            .saturating_sub(prev.core)
-            .saturating_add(core_now)
-    };
+    let pkg_delta = delta(pkg_energy, prev.pkg);
+    let core_delta = delta(core_energy, prev.core);
+    let uncore_delta = delta(uncore_energy, prev.uncore);
+    let total_delta = delta(total_energy, prev.total);
 
     result.package = pkg_delta as f64 / dt / 1e6;
     result.core = core_delta as f64 / dt / 1e6;
-    result.total = result.package;
+    result.uncore = uncore_delta as f64 / dt / 1e6;
+    result.total = if total_delta > 0 {
+        total_delta as f64 / dt / 1e6
+    } else {
+        result.package
+    };
     result
 }
 

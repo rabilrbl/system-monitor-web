@@ -2072,8 +2072,13 @@
 
           var powerW = data.power || 0;
           var powerLabel = 'Battery draw';
-          if (data.ac_online && (data.current || 0) <= 1000 && powerW > 0.05) powerLabel = 'Live draw';
-          else if (data.status === 'Charging') powerLabel = 'Charge draw';
+          if (data.ac_online && (data.current || 0) <= 1000) {
+            var liveDraw = latestViews.power ? Number(latestViews.power.total || latestViews.power.package || 0) : 0;
+            if (liveDraw > 0.05) {
+              powerW = liveDraw;
+              powerLabel = 'Live draw';
+            }
+          } else if (data.status === 'Charging') powerLabel = 'Charge draw';
           setText('bat-power-label', powerLabel);
           setText('bat-power', powerW.toFixed(1));
           setText('bat-power-2', powerW.toFixed(1));
