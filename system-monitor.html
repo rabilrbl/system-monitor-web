@@ -518,77 +518,203 @@
     .history-line.secondary { filter: drop-shadow(0 0 8px rgba(167,139,250,.30)); }
 
     .chart-modal[hidden] { display: none; }
+    body.modal-open { overflow: hidden; }
     .chart-modal {
       position: fixed;
       inset: 0;
       z-index: 80;
       display: grid;
       place-items: center;
-      padding: 16px;
+      padding: clamp(12px, 4vw, 28px);
     }
     .chart-modal-backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(2, 6, 23, .72);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.14), transparent 34%),
+        radial-gradient(circle at 92% 18%, rgba(167, 139, 250, 0.12), transparent 28%),
+        rgba(2, 6, 23, .78);
+      backdrop-filter: blur(18px) saturate(135%);
     }
     .chart-modal-card {
       position: relative;
-      width: min(720px, 100%);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      border-radius: 18px;
-      background: rgba(8,14,28,.96);
-      box-shadow: 0 24px 90px rgba(0,0,0,.65);
-      padding: 16px;
+      width: min(760px, calc(100vw - 24px));
+      max-height: min(88vh, 760px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 24px;
+      background:
+        linear-gradient(145deg, rgba(15, 23, 42, .98), rgba(8, 13, 26, .98)),
+        rgba(8,14,28,.98);
+      box-shadow: 0 32px 110px rgba(0,0,0,.70), inset 0 1px 0 rgba(255,255,255,.05);
+      animation: modal-pop .18s ease-out;
+    }
+    .chart-modal-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, .7), rgba(167, 139, 250, .55), transparent);
+      pointer-events: none;
+    }
+    @keyframes modal-pop {
+      from { opacity: 0; transform: translateY(8px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .chart-modal-head {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 16px;
+      padding: 18px 20px 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,0));
     }
-    .chart-modal-title { margin: 0; font-size: 1.05rem; }
-    .chart-modal-subtitle { margin-top: 4px; color: var(--muted); font-size: .8rem; }
+    .chart-modal-title { margin: 0; font-size: 1.12rem; line-height: 1.2; letter-spacing: -0.02em; }
+    .chart-modal-subtitle { margin-top: 6px; color: var(--muted); font-size: .82rem; line-height: 1.45; }
     .chart-modal-close {
       display: grid;
       place-items: center;
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      border: 1px solid var(--panel-border);
-      background: rgba(255,255,255,.04);
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border-radius: 13px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(255,255,255,.055);
       color: var(--text);
       cursor: pointer;
       font-size: 1.2rem;
       line-height: 1;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
     }
+    .chart-modal-close:hover { background: rgba(255,255,255,.09); border-color: rgba(148, 163, 184, .35); transform: translateY(-1px); }
+    .chart-modal-close:focus-visible,
+    .modal-action-btn:focus-visible { outline: 2px solid rgba(56, 189, 248, .85); outline-offset: 2px; }
     .chart-modal svg {
-      width: 100%;
-      height: min(46vh, 300px);
+      width: calc(100% - 36px);
+      height: clamp(190px, 44vh, 340px);
       display: block;
-      border-radius: 14px;
-      background: rgba(15, 23, 42, 0.52);
-      border: 1px solid rgba(148, 163, 184, 0.10);
-      padding: 8px;
+      margin: 18px 18px 0;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.46));
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 12px;
       overflow: visible;
     }
     .chart-modal-legend {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 10px;
+      margin: 14px 18px 18px;
       color: var(--muted);
-      font-size: .78rem;
+      font-size: .8rem;
       font-weight: 700;
+    }
+    .chart-modal-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.035);
     }
     .chart-modal-legend span::before {
       content: "";
       display: inline-block;
       width: 8px;
       height: 8px;
-      margin-right: 6px;
       border-radius: 999px;
       background: var(--legend-color, #38bdf8);
+      box-shadow: 0 0 12px var(--legend-color, #38bdf8);
+    }
+    .chart-modal-content {
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+      margin: 0;
+      min-height: 0;
+      overflow: auto;
+    }
+    .modal-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .modal-info-card {
+      min-width: 0;
+      min-height: 82px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026));
+    }
+    .modal-info-card span {
+      color: var(--muted);
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .modal-info-card strong {
+      color: var(--text);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .95rem;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+    .modal-action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      padding-top: 2px;
+    }
+    .modal-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      background: rgba(56, 189, 248, 0.08);
+      color: #dff7ff;
+      font-weight: 800;
+      font-size: .78rem;
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .modal-action-btn::after { content: "›"; opacity: .72; font-size: 1rem; line-height: 1; }
+    .modal-action-btn[data-modal-action="refresh"] {
+      background: linear-gradient(135deg, rgba(56,189,248,.24), rgba(99,102,241,.20));
+      border-color: rgba(56,189,248,.42);
+      color: #f8fafc;
+    }
+    .modal-action-btn[data-modal-action="refresh"]::after { content: "↻"; font-size: .9rem; }
+    .modal-action-btn:hover { transform: translateY(-1px); background: rgba(56, 189, 248, 0.14); border-color: rgba(56,189,248,.36); }
+    .modal-muted,
+    .modal-alert {
+      padding: 14px;
+      border-radius: 16px;
+      line-height: 1.55;
+      font-size: .88rem;
+    }
+    .modal-muted {
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      background: rgba(148, 163, 184, 0.08);
+      color: var(--muted);
+    }
+    .modal-alert {
+      border: 1px solid rgba(245, 158, 11, 0.26);
+      background: rgba(245, 158, 11, 0.10);
+      color: #fde68a;
     }
 
     .hero,
@@ -929,6 +1055,49 @@
       .battery-gauge { width: 80px; height: 80px; }
       .battery-gauge svg { width: 80px; height: 80px; }
       .proc-column { padding: 12px; border-radius: 14px; }
+      .chart-modal { align-items: end; padding: 0; }
+      .chart-modal-card {
+        width: 100%;
+        max-height: 88vh;
+        border-radius: 24px 24px 0 0;
+        border-inline: 0;
+        border-bottom: 0;
+      }
+      .chart-modal-head {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: 20px 16px 14px;
+        background: linear-gradient(180deg, rgba(15,23,42,.98), rgba(15,23,42,.91));
+      }
+      .chart-modal-head::before {
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        transform: translateX(-50%);
+        background: rgba(148, 163, 184, .34);
+      }
+      .chart-modal-title { font-size: 1.02rem; }
+      .chart-modal-subtitle { font-size: .76rem; }
+      .chart-modal-close { width: 36px; height: 36px; border-radius: 12px; }
+      .chart-modal svg { width: calc(100% - 24px); margin: 12px 12px 0; height: min(36vh, 260px); padding: 10px; }
+      .chart-modal-legend { margin: 12px; }
+      .chart-modal-content { padding: 12px 12px max(16px, env(safe-area-inset-bottom)); gap: 12px; }
+      .modal-card-grid { grid-template-columns: 1fr; gap: 9px; }
+      .modal-info-card { min-height: 72px; padding: 12px; border-radius: 14px; }
+      .modal-info-card strong { font-size: .9rem; }
+      .modal-action-row {
+        position: sticky;
+        bottom: 0;
+        margin: 0 -12px calc(-1 * max(16px, env(safe-area-inset-bottom)));
+        padding: 12px 12px max(16px, env(safe-area-inset-bottom));
+        background: linear-gradient(180deg, rgba(8,13,26,0), rgba(8,13,26,.96) 18%);
+      }
+      .modal-action-btn { flex: 1 1 calc(50% - 8px); min-height: 42px; }
     }
 
     @media (max-width: 460px) {
@@ -2065,10 +2234,14 @@
       }).join('');
       svg.innerHTML = grid + lines;
       legend.innerHTML = series.map(function(item) {
-        var latest = item.values && item.values.length ? item.values[item.values.length - 1].toFixed(1) + '%' : '--';
+        var latest = '--';
+        if (item.values && item.values.length) {
+          latest = item.values[item.values.length - 1].toFixed(1) + (kind === 'network' ? ' MB/s' : '%');
+        }
         return '<span style="--legend-color:' + item.color + '">' + item.label + ' · ' + latest + '</span>';
       }).join('');
       modal.hidden = false;
+      modal.setAttribute('data-mode', 'chart');
       document.body.classList.add('modal-open');
       var close = document.getElementById('chart-modal-close');
       if (close) close.focus({ preventScroll: true });
@@ -2076,7 +2249,10 @@
 
     function closeChartModal() {
       var modal = document.getElementById('chart-modal');
-      if (modal) modal.hidden = true;
+      if (modal) {
+        modal.hidden = true;
+        modal.removeAttribute('data-mode');
+      }
       document.body.classList.remove('modal-open');
     }
 
@@ -2092,6 +2268,10 @@
 
     function modalButton(label, nav) {
       return '<button class="modal-action-btn" type="button" data-modal-nav="' + escapeHtml(nav) + '">' + escapeHtml(label) + '</button>';
+    }
+
+    function modalChartButton(label, chart) {
+      return '<button class="modal-action-btn" type="button" data-modal-chart="' + escapeHtml(chart) + '">' + escapeHtml(label) + '</button>';
     }
 
     function currentAlertItems() {
@@ -2124,7 +2304,7 @@
         };
       }
       if (kind === 'settings') {
-        return { title: 'Settings', subtitle: 'Dashboard controls', html: '<div class="modal-card-grid">' + modalCard('Refresh cadence', 'Telemetry 2s · cores 3s') + modalCard('Timezone', 'Asia/Calcutta') + modalCard('Charts', 'Click CPU/Network graphs') + modalCard('Keyboard', 'Esc closes dialogs') + '</div><div class="modal-action-row"><button class="modal-action-btn" type="button" data-modal-action="refresh">Refresh now</button>' + modalButton('CPU graph', 'cpu') + modalButton('Network graph', 'network') + '</div>' };
+        return { title: 'Settings', subtitle: 'Dashboard controls', html: '<div class="modal-card-grid">' + modalCard('Refresh cadence', 'Telemetry 2s · cores 3s') + modalCard('Timezone', 'Asia/Calcutta') + modalCard('Charts', 'Expanded CPU and network history') + modalCard('Keyboard', 'Esc closes dialogs') + '</div><div class="modal-action-row"><button class="modal-action-btn" type="button" data-modal-action="refresh">Refresh now</button>' + modalChartButton('CPU graph', 'cpu') + modalChartButton('Network graph', 'network') + '</div>' };
       }
       if (kind === 'system' || kind === 'server') {
         return { title: 'System', subtitle: latestViews.cpuModel || 'Host details', html: cards + '<div class="modal-card-grid">' + modalCard('CPU', cpu) + modalCard('Memory', mem) + modalCard('Network', net) + modalCard('Package power', pkg) + modalCard('Battery', bat) + modalCard('Load', latestViews.loadavg || '--') + '</div>' + actions };
@@ -2152,6 +2332,7 @@
       body.className = 'chart-modal-content';
       body.innerHTML = panel.html;
       modal.hidden = false;
+      modal.setAttribute('data-mode', 'info');
       document.body.classList.add('modal-open');
       var close = document.getElementById('chart-modal-close');
       if (close) close.focus({ preventScroll: true });
@@ -2268,6 +2449,11 @@
           var key = navButton.getAttribute('data-modal-nav');
           closeChartModal();
           scrollToNav(key);
+          return;
+        }
+        var chartButton = event.target.closest('[data-modal-chart]');
+        if (chartButton) {
+          openChartModal(chartButton.getAttribute('data-modal-chart'));
           return;
         }
         var actionButton = event.target.closest('[data-modal-action]');
