@@ -88,6 +88,8 @@ struct IntelGpuSample {
 struct RaplSample {
     pkg: u64,
     core: u64,
+    uncore: u64,
+    total: u64,
     at: Instant,
 }
 
@@ -158,6 +160,7 @@ pub fn build_router(ctx: Arc<AppContext>) -> Router {
         .route("/api/system/stat", get(api_stat))
         .route("/api/system/meminfo", get(api_meminfo))
         .route("/api/system/memtotal", get(api_meminfo))
+        .route("/api/system/hostname", get(api_hostname))
         .route("/api/system/cpu_model", get(api_cpu_model))
         .route("/api/system/gpu", get(api_gpu))
         .route("/api/system/intel_gpu", get(api_intel_gpu))
@@ -191,6 +194,10 @@ async fn api_stat() -> Response {
 
 async fn api_meminfo() -> Response {
     text_response(StatusCode::OK, read_text_file("/proc/meminfo"))
+}
+
+async fn api_hostname() -> Response {
+    text_response(StatusCode::OK, get_hostname())
 }
 
 async fn api_cpu_model() -> Response {
@@ -308,6 +315,19 @@ fn read_text_file(path: &str) -> String {
     fs::read_to_string(path).unwrap_or_default()
 }
 
+fn get_hostname() -> String {
+    fs::read_to_string("/proc/sys/kernel/hostname")
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .or_else(|| {
+            std::env::var("HOSTNAME")
+                .ok()
+                .filter(|value| !value.is_empty())
+        })
+        .unwrap_or_else(|| "localhost".to_string())
+}
+
 fn read_number(path: &str) -> Option<f64> {
     let value = read_text_file(path);
     let trimmed = value.trim();
@@ -319,6 +339,13 @@ fn read_number(path: &str) -> Option<f64> {
 
 fn read_i64(path: &str) -> i64 {
     read_text_file(path).trim().parse::<i64>().unwrap_or(0)
+}
+
+fn first_existing_path(paths: &[&str]) -> Option<String> {
+    paths
+        .iter()
+        .find(|path| Path::new(path).exists())
+        .map(|path| (*path).to_string())
 }
 
 fn parse_cpu_total_from_stat(content: &str) -> Option<CpuTimes> {
@@ -521,7 +548,7 @@ fn get_top_cpu() -> Vec<TopCpuProcess> {
             Some(TopCpuProcess { name, cpu })
         })
         .collect::<Vec<_>>();
-    result.truncate(5);
+    result.truncate(20);
     result
 }
 
@@ -545,7 +572,7 @@ fn get_top_mem() -> Vec<TopMemProcess> {
             Some(TopMemProcess { name, mem })
         })
         .collect::<Vec<_>>();
-    result.truncate(5);
+    result.truncate(20);
     result
 }
 
@@ -654,7 +681,7 @@ fn get_top_net(ctx: &Arc<AppContext>) -> Vec<TopNetInterface> {
             .partial_cmp(&(a.rx_mbps + a.tx_mbps))
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    result.truncate(5);
+    result.truncate(20);
     result
 }
 
@@ -820,6 +847,70 @@ fn pick_ac_base() -> Option<String> {
     None
 }
 
+fn power_supply_watts_from_values(
+    power_now: i64,
+    voltage_now: i64,
+    voltage_max: i64,
+    voltage_min: i64,
+    current_now: i64,
+    current_max: i64,
+    allow_derived_power: bool,
+) -> Option<f64> {
+    let direct_power = power_now.abs();
+    if direct_power > 0 {
+        return Some(direct_power as f64 / 1e6);
+    }
+
+    if !allow_derived_power {
+        return None;
+    }
+
+    let voltage = [voltage_now, voltage_max, voltage_min]
+        .into_iter()
+        .find(|value| *value > 0)
+        .unwrap_or(0);
+    let current = [current_now, current_max]
+        .into_iter()
+        .find(|value| value.abs() > 0)
+        .unwrap_or(0)
+        .abs();
+
+    if voltage > 0 && current > 0 {
+        Some((voltage as f64) * (current as f64) / 1e12)
+    } else {
+        None
+    }
+}
+
+fn read_power_supply_watts(base: &str) -> Option<f64> {
+    power_supply_watts_from_values(
+        read_i64(&format!("{base}/power_now")),
+        read_i64(&format!("{base}/voltage_now")),
+        read_i64(&format!("{base}/voltage_max")),
+        read_i64(&format!("{base}/voltage_min")),
+        read_i64(&format!("{base}/current_now")),
+        read_i64(&format!("{base}/current_max")),
+        true,
+    )
+}
+
+fn read_power_supply_direct_watts(base: &str) -> Option<f64> {
+    power_supply_watts_from_values(read_i64(&format!("{base}/power_now")), 0, 0, 0, 0, 0, false)
+}
+
+fn get_online_external_power_watts() -> Option<f64> {
+    let entries = fs::read_dir("/sys/class/power_supply").ok()?;
+    entries.flatten().find_map(|entry| {
+        let base = entry.path();
+        let base = base.to_string_lossy();
+        let supply_type = read_text_file(&format!("{base}/type")).trim().to_string();
+        if supply_type == "Battery" || read_i64(&format!("{base}/online")) != 1 {
+            return None;
+        }
+        read_power_supply_direct_watts(&base)
+    })
+}
+
 fn get_battery() -> BatteryStats {
     let mut result = BatteryStats {
         status: "Unknown".to_string(),
@@ -863,7 +954,13 @@ fn get_battery() -> BatteryStats {
         result.ac_online = read_i64(&format!("{ac}/online")) == 1;
     }
 
-    result.power = (result.voltage as f64) * (result.current as f64) / 1e12;
+    result.power = read_power_supply_watts(&base)
+        .unwrap_or_else(|| (result.voltage as f64) * (result.current as f64) / 1e12);
+    if result.power <= 0.05 && result.ac_online {
+        if let Some(external_power) = get_online_external_power_watts() {
+            result.power = external_power;
+        }
+    }
 
     if result.current > 1000 {
         if result.status == "Discharging" {
@@ -886,23 +983,38 @@ fn get_power(ctx: &Arc<AppContext>) -> PowerStats {
         total: 0.0,
     };
 
-    let pkg_path = "/sys/class/powercap/intel-rapl:0:0/energy_uj";
-    let core_path = "/sys/class/powercap/intel-rapl:0:0/intel-rapl:0:1/energy_uj";
+    let pkg_path = first_existing_path(&[
+        "/sys/class/powercap/intel-rapl:0/energy_uj",
+        "/sys/class/powercap/intel-rapl-mmio:0/energy_uj",
+    ]);
+    let core_path = first_existing_path(&[
+        "/sys/class/powercap/intel-rapl:0:0/energy_uj",
+        "/sys/class/powercap/intel-rapl-mmio:0:0/energy_uj",
+    ]);
+    let uncore_path = first_existing_path(&[
+        "/sys/class/powercap/intel-rapl:0:1/energy_uj",
+        "/sys/class/powercap/intel-rapl-mmio:0:1/energy_uj",
+    ]);
+    let total_path = first_existing_path(&[
+        "/sys/class/powercap/intel-rapl:1/energy_uj",
+        "/sys/class/powercap/intel-rapl-mmio:1/energy_uj",
+    ]);
 
-    let pkg_energy = read_i64(pkg_path);
-    if pkg_energy <= 0 {
+    let pkg_energy = pkg_path.as_deref().map(read_i64).unwrap_or(0).max(0) as u64;
+    let core_energy = core_path.as_deref().map(read_i64).unwrap_or(0).max(0) as u64;
+    let uncore_energy = uncore_path.as_deref().map(read_i64).unwrap_or(0).max(0) as u64;
+    let total_energy = total_path.as_deref().map(read_i64).unwrap_or(0).max(0) as u64;
+    if pkg_energy == 0 && total_energy == 0 {
         return result;
     }
-    let core_energy = read_i64(core_path).max(0);
 
-    let pkg_now = pkg_energy as u64;
-    let core_now = core_energy as u64;
     let now = Instant::now();
-
     let mut telemetry = ctx.telemetry.lock().expect("telemetry mutex poisoned");
     let Some(prev) = telemetry.rapl_prev.replace(RaplSample {
-        pkg: pkg_now,
-        core: core_now,
+        pkg: pkg_energy,
+        core: core_energy,
+        uncore: uncore_energy,
+        total: total_energy,
         at: now,
     }) else {
         return result;
@@ -914,23 +1026,27 @@ fn get_power(ctx: &Arc<AppContext>) -> PowerStats {
     }
 
     let max_energy = 0xFFFF_FFFFu64;
-    let pkg_delta = if pkg_now >= prev.pkg {
-        pkg_now - prev.pkg
-    } else {
-        max_energy.saturating_sub(prev.pkg).saturating_add(pkg_now)
+    let delta = |current: u64, previous: u64| {
+        if current >= previous {
+            current - previous
+        } else {
+            max_energy.saturating_sub(previous).saturating_add(current)
+        }
     };
 
-    let core_delta = if core_now >= prev.core {
-        core_now - prev.core
-    } else {
-        max_energy
-            .saturating_sub(prev.core)
-            .saturating_add(core_now)
-    };
+    let pkg_delta = delta(pkg_energy, prev.pkg);
+    let core_delta = delta(core_energy, prev.core);
+    let uncore_delta = delta(uncore_energy, prev.uncore);
+    let total_delta = delta(total_energy, prev.total);
 
     result.package = pkg_delta as f64 / dt / 1e6;
     result.core = core_delta as f64 / dt / 1e6;
-    result.total = result.package;
+    result.uncore = uncore_delta as f64 / dt / 1e6;
+    result.total = if total_delta > 0 {
+        total_delta as f64 / dt / 1e6
+    } else {
+        result.package
+    };
     result
 }
 
@@ -1216,7 +1332,7 @@ fn get_top_bandwidth_processes(ctx: &Arc<AppContext>) -> Vec<TopBandwidthProcess
             .partial_cmp(&a.total_mbps)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    result.truncate(5);
+    result.truncate(20);
     result
 }
 
@@ -1285,6 +1401,42 @@ mod tests {
         assert_eq!(parsed.len(), 2);
         assert_eq!(parsed.get("wlan0"), Some(&(200, 300)));
         assert_eq!(parsed.get("lo"), Some(&(50, 60)));
+    }
+
+    #[test]
+    fn power_supply_watts_prefers_direct_power_now() {
+        assert_eq!(
+            power_supply_watts_from_values(12_345_000, 0, 0, 0, 0, 0, true),
+            Some(12.345)
+        );
+    }
+
+    #[test]
+    fn power_supply_watts_can_derive_battery_voltage_and_current() {
+        assert_eq!(
+            power_supply_watts_from_values(0, 0, 5_000_000, 0, 3_250_000, 3_000_000, true),
+            Some(16.25)
+        );
+    }
+
+    #[test]
+    fn power_supply_watts_does_not_derive_external_supply_limits() {
+        assert_eq!(
+            power_supply_watts_from_values(0, 0, 5_000_000, 0, 3_250_000, 3_000_000, false),
+            None
+        );
+    }
+
+    #[test]
+    fn power_supply_watts_returns_none_without_voltage_or_current() {
+        assert_eq!(
+            power_supply_watts_from_values(0, 0, 0, 0, 3_000_000, 0, true),
+            None
+        );
+        assert_eq!(
+            power_supply_watts_from_values(0, 5_000_000, 0, 0, 0, 0, true),
+            None
+        );
     }
 
     #[test]

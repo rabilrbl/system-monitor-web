@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>System Monitor</title>
+  <title>System Monitor Web</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -25,8 +25,8 @@
       --warn: #f59e0b;
       --danger: #ef4444;
       --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
-      --radius: 24px;
-      --radius-sm: 16px;
+      --radius: 18px;
+      --radius-sm: 14px;
       --max: 1280px;
     }
 
@@ -64,13 +64,73 @@
       padding: 18px 14px 34px;
     }
 
-    .hero {
-      padding: 18px;
+
+    .topbar {
+      position: sticky;
+      top: 8px;
+      z-index: 20;
+      margin-bottom: 12px;
+      padding: 10px 14px;
       border: 1px solid var(--panel-border);
-      border-radius: 28px;
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(9, 15, 28, 0.95));
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(16px);
+      border-radius: 14px;
+      background: rgba(7, 17, 31, 0.82);
+      backdrop-filter: blur(12px);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-left,.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .topbar-brand{display:none;align-items:center;gap:8px;font-weight:800;letter-spacing:-.02em;color:var(--text);}
+    .topbar-brand svg{width:18px;height:18px;color:#38bdf8;}
+    .chip{padding:5px 9px;border-radius:999px;border:1px solid var(--panel-border);font-size:.75rem;color:var(--muted);}
+    .os-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(34,197,94,.2);}
+    .os-chip svg{width:14px;height:14px;flex-shrink:0;}
+    .refresh-btn{border:1px solid var(--panel-border);background:rgba(56,189,248,.14);color:#bae6fd;border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer;}
+    .refresh-btn:focus-visible{outline:2px solid #38bdf8;outline-offset:2px;}
+    .sparkline{margin-top:5px;height:20px;display:flex;align-items:flex-end;gap:3px;opacity:.9;}
+    .sparkline span{display:block;flex:1;min-width:3px;border-radius:999px;background:rgba(148,163,184,.35);height:20%;transition:height .2s ease, background .2s ease;}
+
+
+    .app-shell{display:grid;grid-template-columns:220px 1fr;gap:14px;}
+    .sidebar{border:1px solid var(--panel-border);border-radius:16px;background:rgba(8,14,28,.92);padding:14px;position:sticky;top:10px;height:calc(100vh - 20px);display:flex;flex-direction:column;}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700;margin-bottom:14px;}
+    .brand-badge{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(56,189,248,.14);color:#38bdf8}
+    .brand-badge svg { width: 18px; height: 18px; }
+    .nav-list{display:grid;gap:6px}
+    .nav-item{padding:10px 12px;border-radius:12px;color:#a9b7cc;text-decoration:none;font-weight:600;display:flex;gap:10px;align-items:center}
+    .nav-item.active,.nav-item:hover{background:rgba(56,189,248,.12);color:#7dd3fc}
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-item .chevron { margin-left: auto; width: 14px; height: 14px; opacity: 0.5; }
+    .spacer{flex:1}
+    .mobile-tabs{display:none}
+    .mobile-hamburger { display: none; }
+    .server-selector {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px; border-radius: 10px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.03);
+      font-size: 0.78rem; font-weight: 600; color: var(--text);
+      cursor: pointer;
+    }
+    .server-selector svg { width: 14px; height: 14px; color: var(--muted); }
+    .topbar-action {
+      display: grid; place-items: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted); cursor: pointer;
+    }
+    .topbar-action svg { width: 16px; height: 16px; }
+
+    .hero {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
     }
 
     .hero-top {
@@ -154,12 +214,34 @@
     }
 
     .quick-card {
-      padding: 14px;
-      min-height: 108px;
+      padding: 11px;
+      min-height: 112px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      position: relative;
+      overflow: hidden;
     }
+    .quick-card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 999px;
+      background: var(--quick-accent, var(--accent-3));
+      opacity: 0.7;
+    }
+    .quick-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .quick-card-icon {
+      width: 22px; height: 22px; flex-shrink: 0;
+      color: var(--quick-accent, var(--muted));
+    }
+    .quick-card .sparkline span { background: var(--quick-accent, rgba(148,163,184,.35)); }
 
     .quick-label {
       font-size: 0.72rem;
@@ -171,17 +253,17 @@
 
     .quick-value {
       font-family: "JetBrains Mono", monospace;
-      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-size: clamp(1.08rem, 2vw, 1.45rem);
       font-weight: 700;
       letter-spacing: -0.04em;
-      margin-top: 10px;
+      margin-top: 4px;
       color: var(--text);
       white-space: nowrap;
     }
 
     .quick-meta {
-      margin-top: 8px;
-      font-size: 0.78rem;
+      margin-top: 4px;
+      font-size: 0.72rem;
       color: var(--muted);
       min-height: 1.2em;
     }
@@ -313,80 +395,337 @@
     }
 
     .cores {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
-      align-items: stretch;
-      justify-content: flex-start;
-      min-height: 0;
+      --core-count: 8;
+      display: grid;
+      grid-template-columns: repeat(var(--core-count), minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+      align-items: end;
+      min-height: 150px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      overflow: hidden;
     }
 
     .core-item {
-      flex: 1 1 154px;
-      min-width: 142px;
-      max-width: 192px;
-      min-height: 58px;
-      padding: 12px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
+      min-width: 0;
+      min-height: 132px;
+      padding: 8px 5px 7px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
       overflow: hidden;
       position: relative;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
+      justify-content: flex-end;
+      gap: 6px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
-    .core-main {
-      min-width: 0;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .core-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
     .core-label {
-      min-width: 0;
+      max-width: 100%;
       color: var(--muted);
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
+      font-size: 0.66rem;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
       font-weight: 700;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      line-height: 1;
     }
 
     .core-value {
       flex-shrink: 0;
       color: var(--text);
-      font-size: 0.84rem;
+      font-size: 0.7rem;
       font-weight: 700;
       font-family: "JetBrains Mono", monospace;
+      line-height: 1;
+      white-space: nowrap;
     }
 
     .core-track {
-      height: 8px;
+      width: clamp(10px, 1.2vw, 16px);
+      flex: 1;
+      min-height: 72px;
       border-radius: 999px;
       background: rgba(255,255,255,0.08);
       overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+      margin-inline: auto;
     }
 
     .core-fill {
-      height: 100%;
-      width: 0%;
+      width: 100%;
+      height: 0%;
       border-radius: inherit;
-      transition: width 0.35s ease, background 0.25s ease;
+      transition: height 0.35s ease, background 0.25s ease;
+      min-height: 4px;
     }
+
+    .history-chart {
+      position: relative;
+      margin: 14px 0;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.48);
+      border: 1px solid rgba(148, 163, 184, 0.10);
+      overflow: hidden;
+    }
+
+    .history-chart[data-chart] {
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .history-chart[data-chart]:hover,
+    .history-chart[data-chart]:focus-visible {
+      border-color: rgba(56,189,248,.35);
+      background: rgba(15, 23, 42, 0.64);
+      outline: none;
+    }
+
+    .history-chart-top,
+    .history-chart-axis {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .history-chart-top strong {
+      color: var(--text);
+      font-family: "JetBrains Mono", monospace;
+      letter-spacing: -0.02em;
+      text-transform: none;
+    }
+
+    .history-chart svg {
+      display: block;
+      width: 100%;
+      height: 120px;
+      margin: 10px 0 6px;
+      overflow: visible;
+    }
+
+    .history-grid-line { stroke: rgba(148, 163, 184, 0.12); stroke-width: 1; }
+    .history-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px rgba(56,189,248,.35)); }
+    .history-line.secondary { filter: drop-shadow(0 0 8px rgba(167,139,250,.30)); }
+
+    .chart-modal[hidden] { display: none; }
+    body.modal-open { overflow: hidden; }
+    .chart-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: clamp(12px, 4vw, 28px);
+    }
+    .chart-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.14), transparent 34%),
+        radial-gradient(circle at 92% 18%, rgba(167, 139, 250, 0.12), transparent 28%),
+        rgba(2, 6, 23, .78);
+      backdrop-filter: blur(18px) saturate(135%);
+    }
+    .chart-modal-card {
+      position: relative;
+      width: min(760px, calc(100vw - 24px));
+      max-height: min(88vh, 760px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 24px;
+      background:
+        linear-gradient(145deg, rgba(15, 23, 42, .98), rgba(8, 13, 26, .98)),
+        rgba(8,14,28,.98);
+      box-shadow: 0 32px 110px rgba(0,0,0,.70), inset 0 1px 0 rgba(255,255,255,.05);
+      animation: modal-pop .18s ease-out;
+    }
+    .chart-modal-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, .7), rgba(167, 139, 250, .55), transparent);
+      pointer-events: none;
+    }
+    @keyframes modal-pop {
+      from { opacity: 0; transform: translateY(8px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .chart-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,0));
+    }
+    .chart-modal-title { margin: 0; font-size: 1.12rem; line-height: 1.2; letter-spacing: -0.02em; }
+    .chart-modal-subtitle { margin-top: 6px; color: var(--muted); font-size: .82rem; line-height: 1.45; }
+    .chart-modal-close {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border-radius: 13px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(255,255,255,.055);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .chart-modal-close:hover { background: rgba(255,255,255,.09); border-color: rgba(148, 163, 184, .35); transform: translateY(-1px); }
+    .chart-modal-close:focus-visible,
+    .modal-action-btn:focus-visible { outline: 2px solid rgba(56, 189, 248, .85); outline-offset: 2px; }
+    .chart-modal svg {
+      width: calc(100% - 36px);
+      height: clamp(190px, 44vh, 340px);
+      display: block;
+      margin: 18px 18px 0;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.46));
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 12px;
+      overflow: visible;
+    }
+    .chart-modal-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 18px 18px;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 700;
+    }
+    .chart-modal-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.035);
+    }
+    .chart-modal-legend span::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--legend-color, #38bdf8);
+      box-shadow: 0 0 12px var(--legend-color, #38bdf8);
+    }
+    .chart-modal-content {
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+      margin: 0;
+      min-height: 0;
+      overflow: auto;
+    }
+    .modal-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .modal-info-card {
+      min-width: 0;
+      min-height: 82px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026));
+    }
+    .modal-info-card span {
+      color: var(--muted);
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .modal-info-card strong {
+      color: var(--text);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .95rem;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+    .modal-info-card-wide { grid-column: 1 / -1; }
+    .modal-action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      padding-top: 2px;
+    }
+    .modal-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      background: rgba(56, 189, 248, 0.08);
+      color: #dff7ff;
+      font-weight: 800;
+      font-size: .78rem;
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .modal-action-btn::after { content: "›"; opacity: .72; font-size: 1rem; line-height: 1; }
+    .modal-action-btn[data-modal-action="refresh"] {
+      background: linear-gradient(135deg, rgba(56,189,248,.24), rgba(99,102,241,.20));
+      border-color: rgba(56,189,248,.42);
+      color: #f8fafc;
+    }
+    .modal-action-btn[data-modal-action="refresh"]::after { content: "↻"; font-size: .9rem; }
+    .modal-action-btn:hover { transform: translateY(-1px); background: rgba(56, 189, 248, 0.14); border-color: rgba(56,189,248,.36); }
+    .modal-muted,
+    .modal-alert {
+      padding: 14px;
+      border-radius: 16px;
+      line-height: 1.55;
+      font-size: .88rem;
+    }
+    .modal-muted {
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      background: rgba(148, 163, 184, 0.08);
+      color: var(--muted);
+    }
+    .modal-alert {
+      border: 1px solid rgba(245, 158, 11, 0.26);
+      background: rgba(245, 158, 11, 0.10);
+      color: #fde68a;
+    }
+
+    .hero,
+    .panel { scroll-margin-top: 86px; }
 
     .gpu-chip,
     .battery-chip,
@@ -403,6 +742,27 @@
     .temperature-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .temperature-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .temp-row {
+      display: grid;
+      grid-template-columns: 1fr auto 140px;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .temp-row:last-child { border-bottom: none; }
+    .temp-label { font-size: 0.82rem; color: var(--text); font-weight: 500; }
+    .temp-value { font-family: "JetBrains Mono", monospace; font-size: 0.82rem; font-weight: 700; color: var(--text); }
+    .temp-bar-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .temp-bar-fill { height: 100%; border-radius: inherit; transition: width 0.45s ease, background 0.25s ease; }
+    .view-all { display: block; margin-top: 10px; font-size: 0.78rem; color: var(--accent-3); text-decoration: none; font-weight: 600; }
+    .view-all:hover { text-decoration: underline; }
 
     .battery-chip {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -432,6 +792,36 @@
       word-break: break-word;
     }
 
+    .battery-gauge-wrap {
+      display: flex; align-items: center; gap: 18px; margin-bottom: 14px;
+    }
+    .battery-gauge {
+      position: relative; width: 90px; height: 90px; flex-shrink: 0;
+    }
+    .battery-gauge svg { transform: rotate(-90deg); }
+    .battery-gauge-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
+    .battery-gauge-fill { fill: none; stroke-width: 8; stroke-linecap: round;
+      transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease;
+    }
+    .battery-gauge-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      white-space: nowrap;
+    }
+    .battery-gauge-text .battery-gauge-unit {
+      margin-left: 1px;
+      font-size: 0.72em;
+      color: var(--muted);
+      letter-spacing: -0.02em;
+    }
     .battery-hero {
       display: flex;
       align-items: center;
@@ -464,7 +854,7 @@
 
     .proc-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
     }
 
@@ -572,16 +962,83 @@
     .error-banner.visible { display: block; }
 
     @media (max-width: 1100px) {
+      .app-shell{grid-template-columns:1fr;}
+      .sidebar{display:none;}
       .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .layout { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 780px) {
-      .shell { padding: 12px 10px 24px; }
-      .hero { padding: 14px; border-radius: 24px; }
+      .mobile-tabs{position:fixed;left:8px;right:8px;bottom:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;z-index:25;background:rgba(7,17,31,.94);border:1px solid var(--panel-border);border-radius:16px;padding:7px;box-shadow:0 18px 45px rgba(0,0,0,.45);}
+      .mobile-tab {
+        display: flex; flex-direction: column; align-items: center; gap: 3px;
+        text-decoration: none; color: var(--muted); font-size: .64rem; text-align: center;
+        padding: 5px 2px; border-radius: 10px;
+      }
+      .mobile-tab svg { width: 17px; height: 17px; }
+      .mobile-tab.active { color: #38bdf8; font-weight: 700; background: rgba(56,189,248,.11); }
+      .mobile-hamburger {
+        display: grid; width: 32px; height: 32px; place-items: center;
+        border: 1px solid var(--panel-border); border-radius: 9px;
+        background: rgba(255,255,255,0.035); color: var(--text); cursor: pointer;
+      }
+      .mobile-hamburger svg { width: 18px; height: 18px; }
+      .topbar {
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr) 32px;
+        grid-template-areas: "menu brand action" "server server server";
+        gap: 8px;
+        padding: 9px 10px;
+      }
+      .topbar-left,
+      .topbar-right { display: contents; }
+      .mobile-hamburger { grid-area: menu; }
+      .topbar-brand { grid-area: brand; display: inline-flex; justify-content: center; min-width: 0; font-size: .92rem; }
+      .topbar-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .topbar-action { grid-area: action; }
+      .server-selector { grid-area: server; justify-self: start; max-width: calc(100% - 72px); min-width: 0; }
+      .server-selector span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .os-chip { grid-area: server; justify-self: end; align-self: center; z-index: 1; white-space: nowrap; }
+      #uptime-chip, #last-updated-chip, #refresh-now { display: none; }
+      .sidebar {
+        position: fixed;
+        display: flex;
+        inset: 10px auto 10px 10px;
+        width: min(82vw, 280px);
+        height: auto;
+        z-index: 40;
+        transform: translateX(calc(-100% - 24px));
+        transition: transform .22s ease;
+        box-shadow: 0 24px 70px rgba(0,0,0,.55);
+      }
+      .sidebar.is-open { transform: translateX(0); }
+      body.mobile-sidebar-open::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 35;
+        background: rgba(2, 6, 23, .48);
+        pointer-events: none;
+      }
+      .server-selector .chip { display:none; }
+      body{padding-bottom:84px;}
+      .shell { padding: 10px 8px 24px; }
+      .hero { padding: 0; border-radius: 0; }
       .hero-top { flex-direction: column; align-items: flex-start; }
       .hero-side { text-align: left; min-width: 0; }
-      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .quick-card { min-height: 104px; padding: 10px; }
+      .quick-card-icon { width: 18px; height: 18px; }
+      .quick-card-header { gap: 6px; margin-bottom: 2px; }
+      .quick-label { font-size: .7rem; text-transform: none; letter-spacing: .01em; }
+      .quick-value { font-size: 1.08rem; line-height: 1.08; margin-top: 2px; }
+      .quick-meta { font-size: .68rem; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .quick-card .sparkline { height: 14px; gap: 2px; margin-top: 3px; }
+      .quick-card .sparkline span { min-width: 2px; }
+      .layout { gap: 10px; margin-top: 10px; }
+      .stack { gap: 10px; }
+      .panel { padding: 13px; }
+      .panel-head { margin-bottom: 12px; }
       .metric-row,
       .gpu-chip,
       .network-grid,
@@ -589,72 +1046,243 @@
       .temperature-grid,
       .battery-chip,
       .proc-grid { grid-template-columns: 1fr; }
-      .core-item {
-        flex-basis: calc(50% - 5px);
-        min-width: calc(50% - 5px);
-        max-width: none;
-        min-height: 54px;
+      .metric-box { padding: 11px; border-radius: 14px; }
+      .metric-box .value { font-size: 1.18rem; margin-top: 5px; }
+      .metric-box .desc { display: none; }
+      .history-chart { padding: 10px; margin: 10px 0; }
+      .history-chart svg { height: 96px; }
+      .cores { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; min-height: 152px; padding: 8px; }
+      .core-item { min-height: 74px; padding: 5px 4px 4px; border-radius: 10px; gap: 4px; }
+      .core-track { width: 10px; min-height: 42px; }
+      .core-value { font-size: .54rem; }
+      .core-label { font-size: .54rem; letter-spacing: .03em; }
+      #processes-section { margin-top: 8px; }
+      .temp-row { grid-template-columns: 1fr auto; gap: 8px; }
+      .temp-bar-track { grid-column: 1 / -1; }
+      .battery-gauge-wrap { gap: 12px; }
+      .battery-gauge { width: 80px; height: 80px; }
+      .battery-gauge svg { width: 80px; height: 80px; }
+      .proc-column { padding: 12px; border-radius: 14px; }
+      .chart-modal { align-items: end; padding: 0; }
+      .chart-modal-card {
+        width: 100%;
+        max-height: 88vh;
+        border-radius: 24px 24px 0 0;
+        border-inline: 0;
+        border-bottom: 0;
       }
+      .chart-modal-head {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: 20px 16px 14px;
+        background: linear-gradient(180deg, rgba(15,23,42,.98), rgba(15,23,42,.91));
+      }
+      .chart-modal-head::before {
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        transform: translateX(-50%);
+        background: rgba(148, 163, 184, .34);
+      }
+      .chart-modal-title { font-size: 1.02rem; }
+      .chart-modal-subtitle { font-size: .76rem; }
+      .chart-modal-close { width: 36px; height: 36px; border-radius: 12px; }
+      .chart-modal svg { width: calc(100% - 24px); margin: 12px 12px 0; height: min(36vh, 260px); padding: 10px; }
+      .chart-modal-legend { margin: 12px; }
+      .chart-modal-content { padding: 12px 12px max(16px, env(safe-area-inset-bottom)); gap: 12px; }
+      .modal-card-grid { grid-template-columns: 1fr; gap: 9px; }
+      .modal-info-card {
+        min-height: 58px;
+        display: grid;
+        grid-template-columns: minmax(82px, .34fr) minmax(0, 1fr);
+        align-items: center;
+        justify-content: initial;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 14px;
+      }
+      .modal-info-card strong { font-size: .88rem; text-align: right; }
+      .modal-info-card span { font-size: .63rem; line-height: 1.2; }
+      .modal-action-row {
+        position: sticky;
+        bottom: 0;
+        margin: 0 -12px calc(-1 * max(16px, env(safe-area-inset-bottom)));
+        padding: 12px 12px max(16px, env(safe-area-inset-bottom));
+        background: linear-gradient(180deg, rgba(8,13,26,0), rgba(8,13,26,.96) 18%);
+      }
+      .modal-action-btn { flex: 1 1 calc(50% - 8px); min-height: 42px; }
     }
 
     @media (max-width: 460px) {
-      .quick-grid { grid-template-columns: 1fr; }
-      .quick-card { min-height: 94px; }
+      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .quick-card { min-height: 102px; padding: 10px; }
       .title { font-size: 1.85rem; }
-      .panel, .quick-card { border-radius: 18px; }
-      .hero { border-radius: 22px; }
-      .core-item {
-        flex-basis: 100%;
-        min-width: 100%;
-      }
+      .panel, .quick-card { border-radius: 14px; }
+      .hero { border-radius: 0; }
+      .quick-value { font-size: 1.04rem; }
+      .quick-meta { font-size: 0.66rem; }
+      .metric-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .core-label { font-size: .55rem; }
+      .core-value { font-size: .52rem; }
     }
   </style>
 </head>
 <body>
   <main class="shell">
-    <section class="hero">
-      <div class="hero-top">
-        <div>
-          <div class="eyebrow"><span class="pulse"></span> Live system telemetry</div>
-          <h1 class="title">System Monitor</h1>
-          <div class="subtext">A cleaner live view of performance, power, battery, and busiest processes, designed to be readable on mobile first.</div>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </span>
+          System Monitor Web
         </div>
-        <div class="hero-side">
-          <strong id="hostname">Linux</strong>
-          <div id="uptime">Loading uptime...</div>
+        <nav class="nav-list">
+          <a class="nav-item active" href="#" data-nav="overview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Overview
+          </a>
+          <a class="nav-item" href="#" data-nav="cpu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></svg>
+            CPU
+          </a>
+          <a class="nav-item" href="#" data-nav="memory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7V4"/><path d="M11 7V4"/><path d="M15 7V4"/><path d="M19 7V4"/><path d="M7 20v-3"/><path d="M11 20v-3"/><path d="M15 20v-3"/><path d="M19 20v-3"/><path d="M7 11h10"/><path d="M7 14h6"/></svg>
+            Memory
+          </a>
+          <a class="nav-item" href="#" data-nav="gpu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v4h4"/><path d="M18 4l-6 6"/><path d="M4 14h4v4"/><path d="M4 18l6-6"/><path d="M14 14h4v4"/><path d="M14 18l6-6"/></svg>
+            GPU
+          </a>
+          <a class="nav-item" href="#" data-nav="network">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            Network
+          </a>
+          <a class="nav-item" href="#" data-nav="disks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Disks
+          </a>
+          <a class="nav-item" href="#" data-nav="sensors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+            Sensors
+          </a>
+          <a class="nav-item" href="#" data-nav="power">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Power
+          </a>
+          <a class="nav-item" href="#" data-nav="processes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Processes
+          </a>
+          <a class="nav-item" href="#" data-nav="services">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+            Services
+          </a>
+          <a class="nav-item" href="#" data-nav="logs">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Logs
+          </a>
+          <a class="nav-item" href="#" data-nav="alerts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            Alerts
+          </a>
+        </nav>
+        <div class="spacer"></div>
+        <a class="nav-item" href="#" data-nav="system">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          System
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </a>
+      </aside>
+      <div>
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-hamburger" id="mobile-hamburger" type="button" title="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="topbar-brand">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>System Monitor Web</span>
         </div>
+        <div class="server-selector" id="server-selector" role="button" tabindex="0" title="Server details">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          <span id="host-chip-top">hostname</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <span class="chip os-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c-2.8 0-5 3.2-5 7.2 0 1.6-.9 3-1.8 4.5-.8 1.3-.6 3 .4 4.1C6.8 19.2 9.1 20 12 20s5.2-.8 6.4-2.2c1-1.1 1.2-2.8 .4-4.1C17.9 12.2 17 10.8 17 9.2 17 5.2 14.8 2 12 2z"/><path d="M9.5 9h.01"/><path d="M14.5 9h.01"/><path d="M10 13c.7.5 1.3.7 2 .7s1.3-.2 2-.7"/><path d="M8 19l-2 2"/><path d="M16 19l2 2"/></svg>
+          Linux
+        </span>
+        <span class="chip" id="uptime-chip">Uptime: --</span>
       </div>
-
+      <div class="topbar-right">
+        <span class="chip" id="last-updated-chip">Updated -- ago</span>
+        <button class="topbar-action" id="settings-button" title="Settings" type="button" aria-label="Open settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+        <button class="refresh-btn" id="refresh-now" type="button">Refresh now</button>
+      </div>
+    </header>
+    <section class="hero" id="overview-section">
       <div class="quick-grid">
-        <div class="quick-card">
-          <div class="quick-label">CPU</div>
+        <div class="quick-card" style="--quick-accent:#38bdf8">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></svg>
+            <div class="quick-label">CPU</div>
+          </div>
           <div class="quick-value"><span id="cpu-pct">--</span>%</div>
-          <div class="quick-meta" id="cpu-cores-label">--</div>
+          <div class="quick-meta" id="cpu-load-meta">--</div>
+          <div class="sparkline" id="spark-cpu" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">Memory</div>
+        <div class="quick-card" style="--quick-accent:#a78bfa">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7V4"/><path d="M11 7V4"/><path d="M15 7V4"/><path d="M19 7V4"/><path d="M7 20v-3"/><path d="M11 20v-3"/><path d="M15 20v-3"/><path d="M19 20v-3"/><path d="M7 11h10"/><path d="M7 14h6"/></svg>
+            <div class="quick-label">Memory</div>
+          </div>
           <div class="quick-value"><span id="mem-pct">--</span>%</div>
           <div class="quick-meta" id="mem-info">--</div>
+          <div class="sparkline" id="spark-mem" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">GPU</div>
+        <div class="quick-card" style="--quick-accent:#22c55e">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v4h4"/><path d="M18 4l-6 6"/><path d="M4 14h4v4"/><path d="M4 18l6-6"/><path d="M14 14h4v4"/><path d="M14 18l6-6"/></svg>
+            <div class="quick-label">GPU</div>
+          </div>
           <div class="quick-value" id="gpu-freq">--<span class="metric-unit">%</span></div>
           <div class="quick-meta" id="gpu-util-label">--</div>
+          <div class="sparkline" id="spark-gpu" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">Battery</div>
+        <div class="quick-card" style="--quick-accent:#14b8a6">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01"/><path d="M6 14h.01"/></svg>
+            <div class="quick-label">Battery</div>
+          </div>
           <div class="quick-value"><span id="bat-pct">--</span>%</div>
           <div class="quick-meta" id="bat-status-text">--</div>
+          <div class="sparkline" id="spark-bat" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">Download</div>
+        <div class="quick-card" style="--quick-accent:#38bdf8">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <div class="quick-label">Download</div>
+          </div>
           <div class="quick-value"><span id="net-down">--</span></div>
           <div class="quick-meta" id="net-bar-label-down">--</div>
+          <div class="sparkline" id="spark-net" aria-hidden="true"></div>
         </div>
-        <div class="quick-card">
-          <div class="quick-label">Package Power</div>
+        <div class="quick-card" style="--quick-accent:#f59e0b">
+          <div class="quick-card-header">
+            <svg class="quick-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <div class="quick-label">Package Power</div>
+          </div>
           <div class="quick-value"><span id="power-pkg">--</span>W</div>
           <div class="quick-meta" id="power-bar-label">--</div>
+          <div class="sparkline" id="spark-power" aria-hidden="true"></div>
         </div>
       </div>
 
@@ -663,7 +1291,7 @@
 
     <section class="layout">
       <div class="stack">
-        <article class="panel">
+        <article class="panel" id="cpu-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">CPU and memory</h2>
@@ -685,6 +1313,22 @@
             </div>
           </div>
 
+          <div class="history-chart" data-chart="cpu" tabindex="0" role="button" aria-label="Open CPU load graph">
+            <div class="history-chart-top">
+              <span>CPU load</span>
+              <strong>Current: <span id="cpu-history-current">--%</span></strong>
+            </div>
+            <svg viewBox="0 0 320 120" preserveAspectRatio="none" role="img" aria-hidden="true">
+              <line class="history-grid-line" x1="0" y1="0" x2="320" y2="0"></line>
+              <line class="history-grid-line" x1="0" y1="30" x2="320" y2="30"></line>
+              <line class="history-grid-line" x1="0" y1="60" x2="320" y2="60"></line>
+              <line class="history-grid-line" x1="0" y1="90" x2="320" y2="90"></line>
+              <line class="history-grid-line" x1="0" y1="120" x2="320" y2="120"></line>
+              <polyline id="cpu-load-line" class="history-line" stroke="#38bdf8" points=""></polyline>
+            </svg>
+            <div class="history-chart-axis"><span>5m</span><span>4m</span><span>3m</span><span>2m</span><span>1m</span><span>Now</span></div>
+          </div>
+
           <div class="bar-group">
             <div class="bar-top"><span>CPU usage</span><strong><span id="cpu-bar-value">--%</span> · <span id="cpu-cores-label-2">--</span></strong></div>
             <div class="bar-track"><div class="bar-fill" id="cpu-bar"></div></div>
@@ -698,10 +1342,10 @@
             <div class="bar-track"><div class="bar-fill" id="swap-bar"></div></div>
           </div>
 
-          <div class="cores" id="cores"></div>
+          <div class="cores" id="cores" style="--core-count: 8"></div>
         </article>
 
-        <article class="panel">
+        <article class="panel" id="processes-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Top workloads</h2>
@@ -712,31 +1356,31 @@
 
           <div class="proc-grid">
             <section class="proc-column">
-              <h3 style="color:#c4b5fd">CPU</h3>
+              <h3 style="color:#c4b5fd">Top CPU</h3>
               <div class="proc-list" id="top-cpu"></div>
+              <a class="view-all" href="#" data-view-all="cpu">View all →</a>
             </section>
             <section class="proc-column">
-              <h3 style="color:#7dd3fc">Memory</h3>
+              <h3 style="color:#7dd3fc">Top Memory</h3>
               <div class="proc-list" id="top-mem"></div>
+              <a class="view-all" href="#" data-view-all="mem">View all →</a>
             </section>
             <section class="proc-column">
               <h3 style="color:#86efac">Network interfaces</h3>
               <div class="proc-list" id="top-net"></div>
+              <a class="view-all" href="#" data-view-all="net">View all →</a>
             </section>
-          </div>
-
-          <div class="proc-grid single-column">
             <section class="proc-column">
-              <h3 style="color:#4ade80">Live network usage by process</h3>
-              <div class="proc-subnote">Aggregated across each process's established connections. Showing executable path plus PID.</div>
+              <h3 style="color:#4ade80">Network by process</h3>
               <div class="proc-list" id="bandwidth-procs"></div>
+              <a class="view-all" href="#" data-view-all="bandwidth">View all →</a>
             </section>
           </div>
         </article>
       </div>
 
       <div class="stack">
-        <article class="panel">
+        <article class="panel" id="gpu-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Graphics</h2>
@@ -760,9 +1404,10 @@
             <div class="bar-top"><span>GPU activity</span><strong id="gpu-bar-value">--</strong></div>
             <div class="bar-track"><div class="bar-fill" id="gpu-bar"></div></div>
           </div>
+          <div class="sparkline" id="spark-gpu-panel" aria-hidden="true"></div>
         </article>
 
-        <article class="panel">
+        <article class="panel" id="network-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Network</h2>
@@ -775,11 +1420,29 @@
             <div class="mini">
               <div class="k">Download</div>
               <div class="v"><span id="net-down-2">--</span> MB/s</div>
+              <div class="sparkline" id="spark-net-down" aria-hidden="true"></div>
             </div>
             <div class="mini">
               <div class="k">Upload</div>
               <div class="v"><span id="net-up">--</span> MB/s</div>
+              <div class="sparkline" id="spark-net-up" aria-hidden="true"></div>
             </div>
+          </div>
+
+          <div class="history-chart" data-chart="network" tabindex="0" role="button" aria-label="Open network activity graph">
+            <div class="history-chart-top">
+              <span>Network activity</span>
+              <strong><span style="color:#38bdf8">↓</span> <span id="net-history-down">--</span> MB/s · <span style="color:#a78bfa">↑</span> <span id="net-history-up">--</span> MB/s</strong>
+            </div>
+            <svg viewBox="0 0 320 120" preserveAspectRatio="none" role="img" aria-hidden="true">
+              <line class="history-grid-line" x1="0" y1="0" x2="320" y2="0"></line>
+              <line class="history-grid-line" x1="0" y1="40" x2="320" y2="40"></line>
+              <line class="history-grid-line" x1="0" y1="80" x2="320" y2="80"></line>
+              <line class="history-grid-line" x1="0" y1="120" x2="320" y2="120"></line>
+              <polyline id="net-down-line" class="history-line" stroke="#38bdf8" points=""></polyline>
+              <polyline id="net-up-line" class="history-line secondary" stroke="#a78bfa" points=""></polyline>
+            </svg>
+            <div class="history-chart-axis"><span>5m</span><span>4m</span><span>3m</span><span>2m</span><span>1m</span><span>Now</span></div>
           </div>
 
           <div class="bar-group" style="margin-top:14px">
@@ -792,7 +1455,7 @@
           </div>
         </article>
 
-        <article class="panel">
+        <article class="panel" id="sensors-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Temperatures</h2>
@@ -802,9 +1465,10 @@
           </div>
 
           <div class="temperature-grid" id="temperatures"></div>
+          <a class="view-all" href="#" data-view-all="temps">View all sensors →</a>
         </article>
 
-        <article class="panel">
+        <article class="panel" id="power-section">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Power and battery</h2>
@@ -813,11 +1477,18 @@
             <div class="badge">Portable status</div>
           </div>
 
-          <div class="battery-hero">
-            <div class="battery-icon" id="bat-icon">🔋</div>
+          <div class="battery-gauge-wrap">
+            <div class="battery-gauge">
+              <svg viewBox="0 0 100 100" width="90" height="90">
+                <circle class="battery-gauge-track" cx="50" cy="50" r="42"></circle>
+                <circle class="battery-gauge-fill" id="bat-gauge-fill" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89" stroke="#22c55e"></circle>
+              </svg>
+              <div class="battery-gauge-text"><span id="bat-pct-2">--</span><span class="battery-gauge-unit">%</span></div>
+            </div>
             <div>
-              <div class="value"><span id="bat-pct-2">--</span>%</div>
+              <div class="value" style="font-size:1.3rem;font-weight:700;"><span id="bat-pct-3">--</span>%</div>
               <div class="desc" id="bat-time">--</div>
+              <div class="quick-meta" style="margin-top:4px;"><span id="bat-status-text-3">--</span> · <span id="bat-power-2">--</span> W</div>
             </div>
           </div>
 
@@ -827,7 +1498,7 @@
               <div class="v"><span id="power-pkg-2">--</span> W</div>
             </div>
             <div class="mini">
-              <div class="k">Battery draw</div>
+              <div class="k" id="bat-power-label">Battery draw</div>
               <div class="v"><span id="bat-power">--</span> W</div>
             </div>
           </div>
@@ -847,13 +1518,51 @@
             <div class="mini"><div class="k">Voltage</div><div class="v" id="bat-voltage">--</div></div>
             <div class="mini"><div class="k">Current</div><div class="v" id="bat-current">--</div></div>
             <div class="mini"><div class="k">Cycles</div><div class="v" id="bat-cycles">--</div></div>
-            <div class="mini"><div class="k">Updated</div><div class="v" id="timestamp-inline">--</div></div>
           </div>
         </article>
       </div>
     </section>
 
     <div class="footer" id="timestamp">--</div>
+      </div>
+    </div>
+    <div class="chart-modal" id="chart-modal" hidden role="dialog" aria-modal="true" aria-labelledby="chart-modal-title">
+      <div class="chart-modal-backdrop" data-close-modal></div>
+      <div class="chart-modal-card">
+        <div class="chart-modal-head">
+          <div>
+            <h2 class="chart-modal-title" id="chart-modal-title">Graph</h2>
+            <div class="chart-modal-subtitle" id="chart-modal-subtitle">Last 60 samples</div>
+          </div>
+          <button class="chart-modal-close" type="button" id="chart-modal-close" aria-label="Close graph">×</button>
+        </div>
+        <svg id="chart-modal-svg" viewBox="0 0 320 160" preserveAspectRatio="none" role="img" aria-label="Expanded graph"></svg>
+        <div class="chart-modal-legend" id="chart-modal-legend"></div>
+      </div>
+    </div>
+
+    <nav class="mobile-tabs">
+      <a class="mobile-tab active" href="#" data-nav="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Overview
+      </a>
+      <a class="mobile-tab" href="#" data-nav="cpu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></svg>
+        CPU
+      </a>
+      <a class="mobile-tab" href="#" data-nav="memory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7V4"/><path d="M11 7V4"/><path d="M15 7V4"/><path d="M19 7V4"/><path d="M7 20v-3"/><path d="M11 20v-3"/><path d="M15 20v-3"/><path d="M19 20v-3"/><path d="M7 11h10"/><path d="M7 14h6"/></svg>
+        Memory
+      </a>
+      <a class="mobile-tab" href="#" data-nav="network">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        Network
+      </a>
+      <a class="mobile-tab" href="#" data-nav="more">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        More
+      </a>
+    </nav>
   </main>
 
   <script>
@@ -871,6 +1580,66 @@
     function setHTML(id, value) {
       var el = document.getElementById(id);
       if (el) el.innerHTML = value;
+    }
+
+
+    var sparkState = { cpu: [], mem: [], gpu: [], bat: [], net: [], power: [], netDown: [], netUp: [], gpuPanel: [] };
+    var sparkColors = { cpu:'#38bdf8', mem:'#a78bfa', gpu:'#22c55e', bat:'#14b8a6', net:'#38bdf8', power:'#f59e0b', netDown:'#38bdf8', netUp:'#a78bfa', gpuPanel:'#22c55e' };
+    var latestViews = { cpu: [], mem: [], net: [], bandwidth: [], temps: [], cpuPct: null, memPct: null, gpu: null, network: null, power: null, battery: null, uptime: '--', cpuModel: '--', hostname: 'hostname' };
+    var expandedViews = { cpu: false, mem: false, net: false, bandwidth: false, temps: false };
+    var collapsedLimits = { cpu: 5, mem: 5, net: 5, bandwidth: 5, temps: 8 };
+
+    function pushSpark(id, value) {
+      if (!(id in sparkState)) return;
+      if (value === undefined || value === null || isNaN(value)) return;
+      var arr = sparkState[id];
+      arr.push(Math.max(0, Math.min(100, Number(value))));
+      if (arr.length > 20) arr.shift();
+      var el = document.getElementById('spark-' + id);
+      if (!el) return;
+      var color = sparkColors[id] || '#94a3b8';
+      el.innerHTML = arr.map(function(v){
+        var h = Math.max(12, Math.round(v));
+        return '<span style="height:' + h + '%;background:' + color + '"></span>';
+      }).join('');
+    }
+
+    var historyState = { cpu: [], netDown: [], netUp: [] };
+
+    function pushHistory(id, value, limit) {
+      if (!(id in historyState)) return;
+      if (value === undefined || value === null || isNaN(value)) return;
+      var arr = historyState[id];
+      arr.push(Math.max(0, Math.min(100, Number(value))));
+      while (arr.length > (limit || 60)) arr.shift();
+    }
+
+    function renderLineChart(lineId, values) {
+      var line = document.getElementById(lineId);
+      if (!line || !values || !values.length) return;
+      var width = 320;
+      var height = 120;
+      var denom = Math.max(1, values.length - 1);
+      var points = values.map(function(v, i) {
+        var x = (i / denom) * width;
+        var y = height - ((Math.max(0, Math.min(100, v)) / 100) * height);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      }).join(' ');
+      line.setAttribute('points', points);
+    }
+
+    function refreshRelativeTimestamp() {
+      if (!lastUpdateTime) return;
+      setText('last-updated-chip', 'Updated ' + fmtAgo(Date.now() - lastUpdateTime));
+    }
+
+    var lastUpdateTime = 0;
+    function fmtAgo(ms) {
+      var s = Math.floor(ms / 1000);
+      if (s < 5) return 'just now';
+      if (s < 60) return s + 's ago';
+      var m = Math.floor(s / 60);
+      return m + 'm ago';
     }
 
     var POLL_INTERVALS = { update: 2000, cores: 3000 };
@@ -936,6 +1705,12 @@
         });
     }
 
+    function setHostname(value) {
+      var hostname = String(value || '').trim() || 'localhost';
+      latestViews.hostname = hostname;
+      setText('host-chip-top', hostname);
+    }
+
     function fmt(n) {
       if (n === undefined || n === null || isNaN(n)) return '--';
       return n.toFixed(1);
@@ -953,10 +1728,10 @@
     }
 
     function formatCoreLabel(label, index) {
-      if (!label) return 'Core ' + index;
+      if (!label) return 'C' + index;
       var match = String(label).match(/(\d+)$/);
-      if (match) return 'Core ' + match[1];
-      return String(label).replace(/[_-]+/g, ' ').replace(/\b\w/g, function(ch) { return ch.toUpperCase(); });
+      if (match) return 'C' + match[1];
+      return String(label).replace(/^cpu/i, 'C').replace(/[_-]+/g, ' ').replace(/\b\w/g, function(ch) { return ch.toUpperCase(); });
     }
 
     function formatGpuPercent(value) {
@@ -1012,6 +1787,60 @@
       return row;
     }
 
+    function shownItems(kind, data) {
+      var items = Array.isArray(data) ? data : [];
+      return expandedViews[kind] ? items : items.slice(0, collapsedLimits[kind] || 5);
+    }
+
+    function updateViewAllLink(kind, noun) {
+      var link = document.querySelector('[data-view-all="' + kind + '"]');
+      if (!link) return;
+      var total = (latestViews[kind] || []).length;
+      var limit = collapsedLimits[kind] || 5;
+      if (total <= limit) {
+        link.hidden = true;
+        return;
+      }
+      link.hidden = false;
+      link.textContent = expandedViews[kind] ? 'Show top ' + limit + ' ↑' : 'View all ' + total + ' ' + noun + ' →';
+    }
+
+    function renderProcList(kind, elementId, unit, mapper, noun) {
+      var el = document.getElementById(elementId);
+      if (!el) return;
+      el.innerHTML = '';
+      shownItems(kind, latestViews[kind]).forEach(function(item) {
+        var mapped = mapper(item);
+        el.appendChild(procRow(mapped.name, mapped.value, unit, mapped.opts));
+      });
+      updateViewAllLink(kind, noun);
+    }
+
+    function renderTemperatureRows() {
+      var el = document.getElementById('temperatures');
+      if (!el) return;
+      el.innerHTML = '';
+      shownItems('temps', latestViews.temps).forEach(function(sensor, i) {
+        var temp = sensor.value_c != null ? sensor.value_c : 0;
+        var name = sensor.label || sensor.source || ('Sensor ' + (i + 1));
+        var pct = Math.min(100, (temp / 100) * 100);
+        var grad;
+        if (temp >= 70) grad = 'linear-gradient(90deg, #f97316, #ef4444)';
+        else if (temp >= 55) grad = 'linear-gradient(90deg, #f59e0b, #f97316)';
+        else if (temp >= 40) grad = 'linear-gradient(90deg, #eab308, #f59e0b)';
+        else grad = 'linear-gradient(90deg, #22c55e, #10b981)';
+
+        var row = document.createElement('div');
+        row.className = 'temp-row';
+        row.innerHTML =
+          '<div class="temp-label">' + name + '</div>' +
+          '<div class="temp-value">' + temp.toFixed(1) + ' °C</div>' +
+          '<div class="temp-bar-track"><div class="temp-bar-fill" style="width:' + pct + '%;background:' + grad + '"></div></div>';
+        el.appendChild(row);
+      });
+      updateViewAllLink('temps', 'sensors');
+    }
+
     function update() {
       if (!isPageActive()) return;
       document.getElementById('error-banner').className = 'error-banner';
@@ -1044,25 +1873,34 @@
         }
         if (currCpu) window.prevCpuStat = currCpu;
 
+        latestViews.cpuPct = totalCpu;
         setText('cpu-pct', fmt(totalCpu));
+        pushSpark('cpu', totalCpu);
+        pushHistory('cpu', totalCpu, 60);
+        renderLineChart('cpu-load-line', historyState.cpu);
         setText('cpu-pct-2', fmt(totalCpu));
+        setText('cpu-history-current', fmt(totalCpu) + '%');
         setText('cpu-bar-value', fmt(totalCpu) + '%');
         var bar = document.getElementById('cpu-bar');
         bar.style.width = totalCpu + '%';
-        bar.style.background = colorBar(totalCpu);
+        bar.style.background = 'linear-gradient(90deg, #38bdf8, #2563eb)';
       });
 
       req('/api/system/loadavg', function(text) {
         var parts = text.trim().split(/\s+/);
-        var label = (parts[0] || '--') + ' load avg';
-        setText('cpu-cores-label', label);
+        var label = 'Load ' + (parts[0] || '--') + ' ' + (parts[1] || '--') + ' ' + (parts[2] || '--');
+        setText('cpu-load-meta', label);
         setText('cpu-cores-label-2', label);
+        latestViews.loadavg = label;
+      });
+
+      req('/api/system/hostname', function(text) {
+        setHostname(text);
       });
 
       req('/api/system/cpu_model', function(text) {
+        latestViews.cpuModel = text.trim();
         setText('cpu-model', text.trim());
-        var host = text.trim().split(' @ ')[0].split(' CPU')[0];
-        if (host) setText('hostname', host);
       });
 
       req('/api/system/meminfo', function(text) {
@@ -1084,11 +1922,14 @@
         var swapUsed = swapTotal - swapFree;
         var swapPct = swapTotal > 0 ? (swapUsed * 100 / swapTotal) : 0;
 
+        latestViews.memPct = memPct;
+        latestViews.memLabel = fmtGB(used) + ' / ' + fmtGB(total);
         setText('mem-pct', fmt(memPct));
+        pushSpark('mem', memPct);
         setText('mem-info', fmtGB(used) + ' / ' + fmtGB(total));
         setText('mem-info-2', fmtGB(used) + ' / ' + fmtGB(total));
         document.getElementById('mem-bar').style.width = memPct + '%';
-        document.getElementById('mem-bar').style.background = colorBar(memPct);
+        document.getElementById('mem-bar').style.background = 'linear-gradient(90deg, #a78bfa, #7c3aed)';
         setText('mem-bar-label', fmt(memPct) + '%');
         document.getElementById('swap-bar').style.width = swapPct + '%';
         document.getElementById('swap-bar').style.background = colorBar(swapPct);
@@ -1102,11 +1943,14 @@
         var pctLabel = formatGpuPercent(pct);
         var freqLabel = formatGpuFrequency(gpu);
         var activityMeta = formatGpuActivityMeta(gpu);
+        latestViews.gpu = gpu;
 
         setHTML('gpu-freq', pctLabel.replace('%', '') + '<span class="metric-unit">%</span>');
+        pushSpark('gpu', pct);
+        pushSpark('gpuPanel', pct);
         setText('gpu-freq-2', pctLabel + ' active');
         setText('gpu-model', gpu.name);
-        setText('gpu-util-label', activityMeta);
+        setText('gpu-util-label', gpu.name || 'GPU');
         setText('gpu-util-label-2', freqLabel);
         setText('gpu-bar-value', pctLabel);
         document.getElementById('gpu-bar').style.width = pct + '%';
@@ -1115,9 +1959,21 @@
 
       reqJSON('/api/system/network', function(data) {
         if (!data) return;
+        latestViews.network = data;
         var rx = data.rx_bytes || 0;
         var tx = data.tx_bytes || 0;
         setText('net-down', fmt(rx / 1e6));
+        pushSpark('net', Math.min(100, (rx / 12.5e6) * 100));
+        var downPct = Math.min(100, (rx / 12.5e6) * 100);
+        var upPct = Math.min(100, (tx / 12.5e6) * 100);
+        pushSpark('netDown', downPct);
+        pushSpark('netUp', upPct);
+        pushHistory('netDown', downPct, 60);
+        pushHistory('netUp', upPct, 60);
+        renderLineChart('net-down-line', historyState.netDown);
+        renderLineChart('net-up-line', historyState.netUp);
+        setText('net-history-down', fmt(rx / 1e6));
+        setText('net-history-up', fmt(tx / 1e6));
         setText('net-down-2', fmt(rx / 1e6));
         setText('net-up', fmt(tx / 1e6));
         var downLabel = fmt((rx * 8) / 1e6) + ' Mbps';
@@ -1125,80 +1981,49 @@
         setText('net-bar-label-down', downLabel);
         setText('net-bar-label-down-2', downLabel);
         setText('net-bar-label-up', upLabel);
-        document.getElementById('net-bar-down').style.width = Math.min(100, (rx / 12.5e6) * 100) + '%';
-        document.getElementById('net-bar-up').style.width = Math.min(100, (tx / 12.5e6) * 100) + '%';
+        document.getElementById('net-bar-down').style.width = downPct + '%';
+        document.getElementById('net-bar-up').style.width = upPct + '%';
         document.getElementById('net-bar-down').style.background = 'linear-gradient(90deg, #38bdf8, #2563eb)';
         document.getElementById('net-bar-up').style.background = 'linear-gradient(90deg, #22c55e, #16a34a)';
       });
 
       reqJSON('/api/system/temperatures', function(data) {
-        var el = document.getElementById('temperatures');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < data.length; i++) {
-            var sensor = data[i];
-            var card = document.createElement('div');
-            card.className = 'mini';
-
-            var label = document.createElement('div');
-            label.className = 'k';
-            label.textContent = sensor.label || sensor.source || ('Sensor ' + (i + 1));
-
-            var value = document.createElement('div');
-            value.className = 'v';
-            value.textContent = (sensor.value_c != null ? sensor.value_c.toFixed(1) : '--') + ' °C';
-
-            var note = document.createElement('div');
-            note.className = 'quick-meta';
-            note.textContent = sensor.source || sensor.kind || '';
-
-            card.appendChild(label);
-            card.appendChild(value);
-            card.appendChild(note);
-            el.appendChild(card);
-          }
-        }
+        latestViews.temps = Array.isArray(data) ? data : [];
+        renderTemperatureRows();
       });
 
       reqJSON('/api/system/top_cpu', function(data) {
-        var el = document.getElementById('top-cpu');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < Math.min(data.length, 5); i++) el.appendChild(procRow(data[i].name, fmt(data[i].cpu), '%'));
-        }
+        latestViews.cpu = Array.isArray(data) ? data : [];
+        renderProcList('cpu', 'top-cpu', '%', function(item) {
+          return { name: item.name, value: fmt(item.cpu) };
+        }, 'processes');
       });
 
       reqJSON('/api/system/top_mem', function(data) {
-        var el = document.getElementById('top-mem');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < Math.min(data.length, 5); i++) el.appendChild(procRow(data[i].name, fmt(data[i].mem), '%'));
-        }
+        latestViews.mem = Array.isArray(data) ? data : [];
+        renderProcList('mem', 'top-mem', '%', function(item) {
+          return { name: item.name, value: fmt(item.mem) };
+        }, 'processes');
       });
 
       reqJSON('/api/system/top_net', function(data) {
-        var el = document.getElementById('top-net');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < Math.min(data.length, 5); i++) {
-            var item = data[i];
-            var val = '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0);
-            el.appendChild(procRow(item.name, val, ' Mbps'));
-          }
-        }
+        latestViews.net = Array.isArray(data) ? data : [];
+        renderProcList('net', 'top-net', ' Mbps', function(item) {
+          return {
+            name: item.name,
+            value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0)
+          };
+        }, 'interfaces');
       });
 
       reqJSON('/api/system/top_bandwidth', function(data) {
-        var el = document.getElementById('bandwidth-procs');
-        el.innerHTML = '';
-        if (data && data.length) {
-          for (var i = 0; i < Math.min(data.length, 5); i++) {
-            var item = data[i];
-            var val = '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0);
-            var meta = 'PID ' + (item.pid || '--') + ' · ' + ((item.connections || 0) === 1 ? '1 connection' : (item.connections || 0) + ' connections');
-            el.appendChild(procRow(item.command || item.name, val, ' Mbps', { meta: meta, wrapName: true }));
-          }
-        }
+        latestViews.bandwidth = Array.isArray(data) ? data : [];
+        renderProcList('bandwidth', 'bandwidth-procs', ' Mbps', function(item) {
+          return {
+            name: item.name || item.command || 'process',
+            value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0)
+          };
+        }, 'processes');
       });
 
       req('/api/system/uptime', function(text) {
@@ -1206,13 +2031,18 @@
         var days = Math.floor(uptimeSec / 86400);
         var hrs = Math.floor((uptimeSec % 86400) / 3600);
         var mins = Math.floor((uptimeSec % 3600) / 60);
-        setText('uptime', 'Up ' + days + 'd ' + hrs + 'h ' + mins + 'm');
+        var uptimeLabel = 'Up ' + days + 'd ' + hrs + 'h ' + mins + 'm';
+        setText('uptime', uptimeLabel);
+        latestViews.uptime = uptimeLabel;
+        setText('uptime-chip', 'Uptime: ' + uptimeLabel);
       });
 
       reqJSON('/api/system/power', function(data) {
         if (data) {
+          latestViews.power = data;
           var pkgW = data.package || 0;
           setText('power-pkg', pkgW.toFixed(1));
+          pushSpark('power', Math.min(100, (pkgW / 30) * 100));
           setText('power-pkg-2', pkgW.toFixed(1));
           var label = pkgW.toFixed(1) + ' W';
           setText('power-bar-label', label);
@@ -1224,27 +2054,41 @@
 
       reqJSON('/api/system/battery', function(data) {
         if (data) {
+          latestViews.battery = data;
           var pct = data.capacity || 0;
           setText('bat-pct', pct);
+          pushSpark('bat', pct);
           setText('bat-pct-2', pct);
+          setText('bat-pct-3', pct);
           document.getElementById('bat-bar').style.width = pct + '%';
           setText('bat-bar-label', pct + '%');
 
-          var icon = '🔋';
-          if (data.ac_online) icon = '🔌';
-          if (data.status === 'Charging') icon = '⚡';
-          if (data.status === 'Full') icon = '✅';
-          setText('bat-icon', icon);
+          var gauge = document.getElementById('bat-gauge-fill');
+          var circum = 2 * Math.PI * 42;
+          var offset = circum - (pct / 100) * circum;
+          gauge.style.strokeDashoffset = offset;
+          gauge.style.stroke = pct < 20 ? '#ef4444' : pct < 50 ? '#f59e0b' : '#22c55e';
 
           setText('bat-status-text', data.status || '--');
           setText('bat-status-text-2', data.status || '--');
+          setText('bat-status-text-3', data.status || '--');
           setText('bat-voltage', ((data.voltage || 0) / 1e6).toFixed(2) + ' V');
           setText('bat-current', ((data.current || 0) / 1e6).toFixed(3) + ' A');
           setText('bat-cycles', data.cycle_count || 0);
 
           var powerW = data.power || 0;
+          var powerLabel = 'Battery draw';
+          if (data.ac_online && (data.current || 0) <= 1000) {
+            var liveDraw = latestViews.power ? Number(latestViews.power.total || latestViews.power.package || 0) : 0;
+            if (liveDraw > 0.05) {
+              powerW = liveDraw;
+              powerLabel = 'Live draw';
+            }
+          } else if (data.status === 'Charging') powerLabel = 'Charge draw';
+          setText('bat-power-label', powerLabel);
           setText('bat-power', powerW.toFixed(1));
-          setText('bat-status', data.ac_online ? 'Charging' : 'Discharging');
+          setText('bat-power-2', powerW.toFixed(1));
+          setText('bat-status', data.ac_online ? 'Plugged in' : 'Discharging');
 
           if (data.time_remaining !== null) {
             var mins = data.time_remaining;
@@ -1261,8 +2105,10 @@
 
       var now = new Date();
       var stamp = now.toLocaleString('en-IN', { timeZone: 'Asia/Calcutta' });
+      lastUpdateTime = Date.now();
       setText('timestamp', 'Last updated · ' + stamp);
-      setText('timestamp-inline', stamp.split(', ').slice(-1)[0] || stamp);
+      setText('last-updated-chip', 'Updated just now');
+      refreshRelativeTimestamp();
     }
 
     function updateCores() {
@@ -1271,46 +2117,40 @@
         var lines = text.split('\n');
         var el = document.getElementById('cores');
         el.innerHTML = '';
+        var count = 0;
         for (var i = 0; i < lines.length; i++) {
           var parts = lines[i].split('\t');
           if (parts.length < 2) continue;
+          count += 1;
           var pct = parseFloat(parts[0]) || 0;
           var label = formatCoreLabel(parts[1], i);
           var item = document.createElement('div');
           item.className = 'core-item';
           item.title = label + ': ' + pct.toFixed(1) + '%';
 
-          var main = document.createElement('div');
-          main.className = 'core-main';
-
-          var head = document.createElement('div');
-          head.className = 'core-head';
-
-          var name = document.createElement('span');
-          name.className = 'core-label';
-          name.textContent = label;
-
           var value = document.createElement('span');
           value.className = 'core-value';
           value.textContent = fmt(pct) + '%';
-
-          head.appendChild(name);
-          head.appendChild(value);
 
           var track = document.createElement('div');
           track.className = 'core-track';
 
           var fill = document.createElement('div');
           fill.className = 'core-fill';
-          fill.style.width = Math.max(4, Math.min(100, pct)) + '%';
-          fill.style.background = colorBar(pct);
+          fill.style.height = Math.max(4, Math.min(100, pct)) + '%';
+          fill.style.background = 'linear-gradient(180deg, #38bdf8, #2563eb)';
+
+          var name = document.createElement('span');
+          name.className = 'core-label';
+          name.textContent = label;
 
           track.appendChild(fill);
-          main.appendChild(head);
-          main.appendChild(track);
-          item.appendChild(main);
+          item.appendChild(value);
+          item.appendChild(track);
+          item.appendChild(name);
           el.appendChild(item);
         }
+        el.style.setProperty('--core-count', String(Math.max(1, count)));
       });
     }
 
@@ -1362,14 +2202,356 @@
       }
     }
 
+    function waitForFetchIdle(maxMs) {
+      var started = Date.now();
+      return new Promise(function(resolve) {
+        function check() {
+          if (activeFetchControllers.size === 0 || Date.now() - started > maxMs) {
+            resolve();
+            return;
+          }
+          setTimeout(check, 80);
+        }
+        check();
+      });
+    }
+
+    function chartPoints(values, height) {
+      values = values && values.length ? values : [0, 0];
+      var width = 320;
+      var denom = Math.max(1, values.length - 1);
+      return values.map(function(v, i) {
+        var x = (i / denom) * width;
+        var y = height - ((Math.max(0, Math.min(100, v)) / 100) * height);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      }).join(' ');
+    }
+
+    function openChartModal(kind) {
+      var modal = document.getElementById('chart-modal');
+      var svg = document.getElementById('chart-modal-svg');
+      var title = document.getElementById('chart-modal-title');
+      var subtitle = document.getElementById('chart-modal-subtitle');
+      var legend = document.getElementById('chart-modal-legend');
+      if (!modal || !svg || !title || !subtitle || !legend) return;
+      svg.style.display = 'block';
+      legend.className = 'chart-modal-legend';
+
+      var series;
+      if (kind === 'network') {
+        title.textContent = 'Network activity';
+        subtitle.textContent = 'Expanded throughput history · last 60 samples';
+        series = [
+          { label: 'Download', color: '#38bdf8', values: historyState.netDown },
+          { label: 'Upload', color: '#a78bfa', values: historyState.netUp }
+        ];
+      } else {
+        title.textContent = 'CPU load';
+        subtitle.textContent = 'Expanded CPU utilization history · last 60 samples';
+        series = [{ label: 'CPU', color: '#38bdf8', values: historyState.cpu }];
+      }
+
+      var grid = [0, 40, 80, 120, 160].map(function(y) {
+        return '<line class="history-grid-line" x1="0" y1="' + y + '" x2="320" y2="' + y + '"></line>';
+      }).join('');
+      var lines = series.map(function(item, index) {
+        return '<polyline class="history-line' + (index ? ' secondary' : '') + '" stroke="' + item.color + '" points="' + chartPoints(item.values, 160) + '"></polyline>';
+      }).join('');
+      svg.innerHTML = grid + lines;
+      legend.innerHTML = series.map(function(item) {
+        var latest = '--';
+        if (item.values && item.values.length) {
+          latest = item.values[item.values.length - 1].toFixed(1) + (kind === 'network' ? ' MB/s' : '%');
+        }
+        return '<span style="--legend-color:' + item.color + '">' + item.label + ' · ' + latest + '</span>';
+      }).join('');
+      modal.hidden = false;
+      modal.setAttribute('data-mode', 'chart');
+      document.body.classList.add('modal-open');
+      var close = document.getElementById('chart-modal-close');
+      if (close) close.focus({ preventScroll: true });
+    }
+
+    function closeChartModal() {
+      var modal = document.getElementById('chart-modal');
+      if (modal) {
+        modal.hidden = true;
+        modal.removeAttribute('data-mode');
+      }
+      document.body.classList.remove('modal-open');
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"]/g, function(ch) {
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[ch];
+      });
+    }
+
+    function modalCard(label, value, modifier) {
+      var cls = 'modal-info-card' + (modifier ? ' ' + modifier : '');
+      return '<div class="' + cls + '"><span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(value) + '</strong></div>';
+    }
+
+    function modalButton(label, nav) {
+      return '<button class="modal-action-btn" type="button" data-modal-nav="' + escapeHtml(nav) + '">' + escapeHtml(label) + '</button>';
+    }
+
+    function modalChartButton(label, chart) {
+      return '<button class="modal-action-btn" type="button" data-modal-chart="' + escapeHtml(chart) + '">' + escapeHtml(label) + '</button>';
+    }
+
+    function currentAlertItems() {
+      var items = [];
+      if (latestViews.cpuPct != null && latestViews.cpuPct >= 90) items.push('CPU load is high: ' + fmt(latestViews.cpuPct) + '%');
+      if (latestViews.memPct != null && latestViews.memPct >= 90) items.push('Memory pressure is high: ' + fmt(latestViews.memPct) + '%');
+      if (latestViews.battery && latestViews.battery.capacity != null && latestViews.battery.capacity < 20 && !latestViews.battery.ac_online) items.push('Battery is low: ' + latestViews.battery.capacity + '%');
+      var hot = (latestViews.temps || []).filter(function(sensor) { return Number(sensor.value_c) >= 80; });
+      hot.forEach(function(sensor) { items.push((sensor.label || sensor.source || 'Sensor') + ' is hot: ' + Number(sensor.value_c).toFixed(1) + ' °C'); });
+      return items;
+    }
+
+    function infoPanel(kind) {
+      var cpu = latestViews.cpuPct == null ? '--' : fmt(latestViews.cpuPct) + '%';
+      var mem = latestViews.memPct == null ? '--' : fmt(latestViews.memPct) + '%';
+      var net = latestViews.network ? '↓ ' + fmt((latestViews.network.rx_bytes || 0) / 1e6) + ' MB/s · ↑ ' + fmt((latestViews.network.tx_bytes || 0) / 1e6) + ' MB/s' : '--';
+      var pkg = latestViews.power && latestViews.power.package != null ? Number(latestViews.power.package).toFixed(1) + ' W' : '--';
+      var bat = latestViews.battery && latestViews.battery.capacity != null ? latestViews.battery.capacity + '% · ' + (latestViews.battery.status || '--') : '--';
+      var loadAvg = latestViews.loadavg ? latestViews.loadavg.replace(/^Load\s*/i, '').trim().replace(/\s+/g, ' · ') : '--';
+      var hostName = latestViews.hostname || (document.getElementById('host-chip-top') ? document.getElementById('host-chip-top').textContent : 'localhost');
+      var actions = '<div class="modal-action-row">' + modalButton('Overview', 'overview') + modalButton('CPU', 'cpu') + modalButton('Memory', 'memory') + modalButton('Network', 'network') + modalButton('Sensors', 'sensors') + modalButton('Power', 'power') + '</div>';
+
+      if (kind === 'alerts') {
+        var alerts = currentAlertItems();
+        return {
+          title: 'Alerts',
+          subtitle: alerts.length ? alerts.length + ' active alert' + (alerts.length === 1 ? '' : 's') : 'No active threshold alerts',
+          html: alerts.length ? '<div class="modal-alert">' + alerts.map(escapeHtml).join('<br>') + '</div>' + actions : '<div class="modal-muted">No CPU, memory, battery, or temperature thresholds are currently tripped.</div>' + actions
+        };
+      }
+      if (kind === 'settings') {
+        return { title: 'Settings', subtitle: 'Dashboard controls', html: '<div class="modal-card-grid">' + modalCard('Refresh cadence', 'Telemetry 2s · cores 3s') + modalCard('Timezone', 'Asia/Calcutta') + modalCard('Charts', 'Expanded CPU and network history') + modalCard('Keyboard', 'Esc closes dialogs') + '</div><div class="modal-action-row"><button class="modal-action-btn" type="button" data-modal-action="refresh">Refresh now</button>' + modalChartButton('CPU graph', 'cpu') + modalChartButton('Network graph', 'network') + '</div>' };
+      }
+      if (kind === 'system' || kind === 'server') {
+        return {
+          title: 'System',
+          subtitle: 'Host details and live telemetry',
+          html: '<div class="modal-card-grid">' +
+            modalCard('Server', hostName) + modalCard('OS', 'Linux') + modalCard('Uptime', latestViews.uptime || '--') + modalCard('Updated', lastUpdateTime ? fmtAgo(Date.now() - lastUpdateTime) : '--') +
+            modalCard('CPU model', latestViews.cpuModel || '--', 'modal-info-card-wide') + modalCard('CPU', cpu) + modalCard('Memory', mem) + modalCard('Network', net, 'modal-info-card-wide') +
+            modalCard('Package power', pkg) + modalCard('Battery', bat) + modalCard('Load average', loadAvg, 'modal-info-card-wide') + '</div>' + actions
+        };
+      }
+      var titles = { disks: 'Disks', services: 'Services', logs: 'Logs' };
+      var copy = {
+        disks: 'Disk telemetry is not exposed by the current backend routes yet. Existing storage-adjacent telemetry is still available through System and Sensors.',
+        services: 'Service management is not exposed by the current backend routes yet. Current process and bandwidth leaders are available in Top workloads.',
+        logs: 'Log streaming is not exposed by the current backend routes yet. Current runtime status is available through Alerts and System.'
+      };
+      return { title: titles[kind] || 'Menu', subtitle: 'Action available', html: '<div class="modal-muted">' + escapeHtml(copy[kind] || 'This menu item is wired.') + '</div>' + actions };
+    }
+
+    function openInfoModal(kind) {
+      var modal = document.getElementById('chart-modal');
+      var svg = document.getElementById('chart-modal-svg');
+      var title = document.getElementById('chart-modal-title');
+      var subtitle = document.getElementById('chart-modal-subtitle');
+      var body = document.getElementById('chart-modal-legend');
+      if (!modal || !svg || !title || !subtitle || !body) return;
+      var panel = infoPanel(kind);
+      title.textContent = panel.title;
+      subtitle.textContent = panel.subtitle;
+      svg.style.display = 'none';
+      body.className = 'chart-modal-content';
+      body.innerHTML = panel.html;
+      modal.hidden = false;
+      modal.setAttribute('data-mode', 'info');
+      document.body.classList.add('modal-open');
+      var close = document.getElementById('chart-modal-close');
+      if (close) close.focus({ preventScroll: true });
+    }
+
+    function openMobileSidebar() {
+      var sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+      sidebar.classList.add('is-open');
+      document.body.classList.add('mobile-sidebar-open');
+    }
+
+    function closeMobileSidebar() {
+      var sidebar = document.querySelector('.sidebar');
+      if (sidebar) sidebar.classList.remove('is-open');
+      document.body.classList.remove('mobile-sidebar-open');
+    }
+
+    function navKeyFor(item) {
+      if (typeof item === 'string') return item;
+      return item.getAttribute('data-nav') || (item.textContent || '').trim().toLowerCase().split(/\s+/)[0];
+    }
+
+    function navTargetFor(item) {
+      var key = navKeyFor(item);
+      var targets = {
+        overview: 'overview-section',
+        cpu: 'cpu-section',
+        memory: 'cpu-section',
+        gpu: 'gpu-section',
+        network: 'network-section',
+        sensors: 'sensors-section',
+        power: 'power-section',
+        processes: 'processes-section'
+      };
+      return targets[key] || null;
+    }
+
+    function scrollToNav(key) {
+      var targetId = navTargetFor(key);
+      var target = targetId ? document.getElementById(targetId) : null;
+      if (!target) return false;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return true;
+    }
+
+    function setActiveNav(item) {
+      var key = navKeyFor(item);
+      document.querySelectorAll('.nav-item, .mobile-tab').forEach(function(el) {
+        el.classList.toggle('active', navKeyFor(el) === key);
+      });
+    }
+
+    var hamburger = document.getElementById('mobile-hamburger');
+    if (hamburger) {
+      hamburger.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+        if (sidebar.classList.contains('is-open')) closeMobileSidebar();
+        else openMobileSidebar();
+      });
+    }
+
+    document.querySelectorAll('[data-view-all]').forEach(function(link) {
+      link.addEventListener('click', function(event) {
+        event.preventDefault();
+        var kind = link.getAttribute('data-view-all');
+        if (!(kind in expandedViews)) return;
+        expandedViews[kind] = !expandedViews[kind];
+        if (kind === 'temps') renderTemperatureRows();
+        else if (kind === 'cpu') renderProcList('cpu', 'top-cpu', '%', function(item) { return { name: item.name, value: fmt(item.cpu) }; }, 'processes');
+        else if (kind === 'mem') renderProcList('mem', 'top-mem', '%', function(item) { return { name: item.name, value: fmt(item.mem) }; }, 'processes');
+        else if (kind === 'net') renderProcList('net', 'top-net', ' Mbps', function(item) { return { name: item.name, value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0) }; }, 'interfaces');
+        else if (kind === 'bandwidth') renderProcList('bandwidth', 'bandwidth-procs', ' Mbps', function(item) {
+          return {
+            name: item.command || item.name,
+            value: '↓ ' + fmt(item.rx_mbps || 0) + ' ↑ ' + fmt(item.tx_mbps || 0),
+            opts: {
+              meta: 'PID ' + (item.pid || '--') + ' · ' + ((item.connections || 0) === 1 ? '1 connection' : (item.connections || 0) + ' connections'),
+              wrapName: true
+            }
+          };
+        }, 'processes');
+      });
+    });
+
+    document.querySelectorAll('.nav-item, .mobile-tab').forEach(function(item) {
+      item.addEventListener('click', function(event) {
+        event.preventDefault();
+        var key = navKeyFor(item);
+        if (key === 'more') {
+          event.stopPropagation();
+          openMobileSidebar();
+          return;
+        }
+        if (scrollToNav(key)) {
+          setActiveNav(item);
+          closeMobileSidebar();
+          return;
+        }
+        openInfoModal(key);
+        setActiveNav(item);
+        closeMobileSidebar();
+      });
+    });
+
+    var modalBody = document.getElementById('chart-modal-legend');
+    if (modalBody) {
+      modalBody.addEventListener('click', function(event) {
+        var navButton = event.target.closest('[data-modal-nav]');
+        if (navButton) {
+          var key = navButton.getAttribute('data-modal-nav');
+          closeChartModal();
+          scrollToNav(key);
+          return;
+        }
+        var chartButton = event.target.closest('[data-modal-chart]');
+        if (chartButton) {
+          openChartModal(chartButton.getAttribute('data-modal-chart'));
+          return;
+        }
+        var actionButton = event.target.closest('[data-modal-action]');
+        if (actionButton && actionButton.getAttribute('data-modal-action') === 'refresh') {
+          update();
+          updateCores();
+          actionButton.textContent = 'Refreshing…';
+          waitForFetchIdle(5000).then(function() { actionButton.textContent = 'Refresh now'; refreshRelativeTimestamp(); });
+        }
+      });
+    }
+
+    var settingsButton = document.getElementById('settings-button');
+    if (settingsButton) settingsButton.addEventListener('click', function() { openInfoModal('settings'); });
+    var serverSelector = document.getElementById('server-selector');
+    if (serverSelector) {
+      serverSelector.addEventListener('click', function() { openInfoModal('server'); });
+      serverSelector.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openInfoModal('server'); }
+      });
+    }
+
+    document.querySelectorAll('.history-chart[data-chart]').forEach(function(chart) {
+      chart.addEventListener('click', function() { openChartModal(chart.getAttribute('data-chart')); });
+      chart.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openChartModal(chart.getAttribute('data-chart'));
+        }
+      });
+    });
+
+    var modalClose = document.getElementById('chart-modal-close');
+    if (modalClose) modalClose.addEventListener('click', closeChartModal);
+    document.querySelectorAll('[data-close-modal]').forEach(function(el) {
+      el.addEventListener('click', closeChartModal);
+    });
+
+    document.addEventListener('click', function(event) {
+      if (!document.body.classList.contains('mobile-sidebar-open')) return;
+      var sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+      if (sidebar.contains(event.target) || (hamburger && hamburger.contains(event.target))) return;
+      closeMobileSidebar();
+    });
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeChartModal();
+        closeMobileSidebar();
+      }
+    });
+
     document.addEventListener('visibilitychange', function() {
       syncPollingState(!document.hidden);
     });
+    document.getElementById('refresh-now').addEventListener('click', function() {
+      setText('refresh-status', 'Refresh: syncing...');
+      update();
+      updateCores();
+      waitForFetchIdle(5000).then(function() {
+        setText('refresh-status', 'Refresh: live');
+        refreshRelativeTimestamp();
+      });
+    });
     window.addEventListener('focus', function() {
       syncPollingState(true);
-    });
-    window.addEventListener('blur', function() {
-      syncPollingState(false);
     });
     window.addEventListener('pageshow', function() {
       syncPollingState(true);
@@ -1378,6 +2560,7 @@
       stopPolling();
     });
 
+    setInterval(refreshRelativeTimestamp, 1000);
     syncPollingState(true);
   </script>
 </body>
