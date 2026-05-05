@@ -1390,6 +1390,24 @@ mod tests {
         assert_eq!(cpu0.system, 30);
         assert_eq!(cpu0.idle, 40);
         assert_eq!(cpu0.iowait, 50);
+        assert_eq!(cpu0.irq, 0);
+        assert_eq!(cpu0.softirq, 0);
+    }
+
+    #[test]
+    fn cpu_times_counts_irq_and_softirq_as_active_time() {
+        let times = CpuTimes {
+            user: 10,
+            nice: 2,
+            system: 3,
+            idle: 80,
+            iowait: 5,
+            irq: 7,
+            softirq: 11,
+        };
+
+        assert_eq!(times.active(), 33);
+        assert_eq!(times.total(), 118);
     }
 
     #[test]
