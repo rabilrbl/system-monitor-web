@@ -136,6 +136,29 @@ async fn refresh_returns_json_with_expected_shape() {
 }
 
 #[tokio::test]
+async fn embedded_index_contains_gpu_usage_history_graph() {
+    let response = app()
+        .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = response_text(response).await;
+    assert!(
+        body.contains("data-chart=\"gpu\""),
+        "GPU panel should expose an expandable usage chart"
+    );
+    assert!(
+        body.contains("id=\"gpu-usage-line\""),
+        "GPU usage chart should render a dedicated polyline"
+    );
+    assert!(
+        body.contains("pushHistory('gpu'") && body.contains("renderLineChart('gpu-usage-line'"),
+        "GPU telemetry updates should feed the history chart"
+    );
+}
+
+#[tokio::test]
 async fn stat_endpoint_returns_text_plain_with_proc_stat_content() {
     let response = app()
         .oneshot(

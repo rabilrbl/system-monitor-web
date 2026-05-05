@@ -1400,6 +1400,22 @@
             </div>
           </div>
 
+          <div class="history-chart" data-chart="gpu" tabindex="0" role="button" aria-label="Open GPU usage graph">
+            <div class="history-chart-top">
+              <span>GPU usage</span>
+              <strong>Current: <span id="gpu-history-current">--%</span></strong>
+            </div>
+            <svg viewBox="0 0 320 120" preserveAspectRatio="none" role="img" aria-hidden="true">
+              <line class="history-grid-line" x1="0" y1="0" x2="320" y2="0"></line>
+              <line class="history-grid-line" x1="0" y1="30" x2="320" y2="30"></line>
+              <line class="history-grid-line" x1="0" y1="60" x2="320" y2="60"></line>
+              <line class="history-grid-line" x1="0" y1="90" x2="320" y2="90"></line>
+              <line class="history-grid-line" x1="0" y1="120" x2="320" y2="120"></line>
+              <polyline id="gpu-usage-line" class="history-line" stroke="#22c55e" points=""></polyline>
+            </svg>
+            <div class="history-chart-axis"><span>5m</span><span>4m</span><span>3m</span><span>2m</span><span>1m</span><span>Now</span></div>
+          </div>
+
           <div class="bar-group" style="margin-top:14px">
             <div class="bar-top"><span>GPU activity</span><strong id="gpu-bar-value">--</strong></div>
             <div class="bar-track"><div class="bar-fill" id="gpu-bar"></div></div>
@@ -1604,7 +1620,7 @@
       }).join('');
     }
 
-    var historyState = { cpu: [], netDown: [], netUp: [] };
+    var historyState = { cpu: [], gpu: [], netDown: [], netUp: [] };
 
     function pushHistory(id, value, limit) {
       if (!(id in historyState)) return;
@@ -1948,6 +1964,9 @@
         setHTML('gpu-freq', pctLabel.replace('%', '') + '<span class="metric-unit">%</span>');
         pushSpark('gpu', pct);
         pushSpark('gpuPanel', pct);
+        pushHistory('gpu', pct, 60);
+        renderLineChart('gpu-usage-line', historyState.gpu);
+        setText('gpu-history-current', pctLabel);
         setText('gpu-freq-2', pctLabel + ' active');
         setText('gpu-model', gpu.name);
         setText('gpu-util-label', gpu.name || 'GPU');
@@ -2245,6 +2264,10 @@
           { label: 'Download', color: '#38bdf8', values: historyState.netDown },
           { label: 'Upload', color: '#a78bfa', values: historyState.netUp }
         ];
+      } else if (kind === 'gpu') {
+        title.textContent = 'GPU usage';
+        subtitle.textContent = 'Expanded GPU utilization history · last 60 samples';
+        series = [{ label: 'GPU', color: '#22c55e', values: historyState.gpu }];
       } else {
         title.textContent = 'CPU load';
         subtitle.textContent = 'Expanded CPU utilization history · last 60 samples';
@@ -2318,7 +2341,7 @@
       var bat = latestViews.battery && latestViews.battery.capacity != null ? latestViews.battery.capacity + '% · ' + (latestViews.battery.status || '--') : '--';
       var loadAvg = latestViews.loadavg ? latestViews.loadavg.replace(/^Load\s*/i, '').trim().replace(/\s+/g, ' · ') : '--';
       var hostName = latestViews.hostname || (document.getElementById('host-chip-top') ? document.getElementById('host-chip-top').textContent : 'localhost');
-      var actions = '<div class="modal-action-row">' + modalButton('Overview', 'overview') + modalButton('CPU', 'cpu') + modalButton('Memory', 'memory') + modalButton('Network', 'network') + modalButton('Sensors', 'sensors') + modalButton('Power', 'power') + '</div>';
+      var actions = '<div class="modal-action-row">' + modalButton('Overview', 'overview') + modalButton('CPU', 'cpu') + modalButton('Memory', 'memory') + modalButton('GPU', 'gpu') + modalButton('Network', 'network') + modalButton('Sensors', 'sensors') + modalButton('Power', 'power') + '</div>';
 
       if (kind === 'alerts') {
         var alerts = currentAlertItems();
@@ -2329,7 +2352,7 @@
         };
       }
       if (kind === 'settings') {
-        return { title: 'Settings', subtitle: 'Dashboard controls', html: '<div class="modal-card-grid">' + modalCard('Refresh cadence', 'Telemetry 2s · cores 3s') + modalCard('Timezone', 'Asia/Calcutta') + modalCard('Charts', 'Expanded CPU and network history') + modalCard('Keyboard', 'Esc closes dialogs') + '</div><div class="modal-action-row"><button class="modal-action-btn" type="button" data-modal-action="refresh">Refresh now</button>' + modalChartButton('CPU graph', 'cpu') + modalChartButton('Network graph', 'network') + '</div>' };
+        return { title: 'Settings', subtitle: 'Dashboard controls', html: '<div class="modal-card-grid">' + modalCard('Refresh cadence', 'Telemetry 2s · cores 3s') + modalCard('Timezone', 'Asia/Calcutta') + modalCard('Charts', 'Expanded CPU, GPU, and network history') + modalCard('Keyboard', 'Esc closes dialogs') + '</div><div class="modal-action-row"><button class="modal-action-btn" type="button" data-modal-action="refresh">Refresh now</button>' + modalChartButton('CPU graph', 'cpu') + modalChartButton('GPU graph', 'gpu') + modalChartButton('Network graph', 'network') + '</div>' };
       }
       if (kind === 'system' || kind === 'server') {
         return {
