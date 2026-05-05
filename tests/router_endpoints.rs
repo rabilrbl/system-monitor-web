@@ -159,6 +159,31 @@ async fn embedded_index_contains_gpu_usage_history_graph() {
 }
 
 #[tokio::test]
+async fn embedded_index_updates_refresh_widgets_in_place() {
+    let response = app()
+        .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = response_text(response).await;
+    assert!(
+        body.contains("function updateProcRow")
+            && body.contains("function updateTemperatureRow")
+            && body.contains("function updateCoreItem"),
+        "refreshable rows should have stable in-place update helpers"
+    );
+    assert!(
+        !body.contains("el.innerHTML = '';"),
+        "refreshes should not clear whole widget containers before repainting"
+    );
+    assert!(
+        !body.contains("el.innerHTML = arr.map"),
+        "sparkline refreshes should update existing bars instead of replacing every bar"
+    );
+}
+
+#[tokio::test]
 async fn stat_endpoint_returns_text_plain_with_proc_stat_content() {
     let response = app()
         .oneshot(
