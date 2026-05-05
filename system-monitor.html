@@ -1590,12 +1590,16 @@
 
     function setText(id, value) {
       var el = document.getElementById(id);
-      if (el) el.textContent = value;
+      if (!el) return;
+      var text = String(value);
+      if (el.textContent !== text) el.textContent = text;
     }
 
     function setHTML(id, value) {
       var el = document.getElementById(id);
-      if (el) el.innerHTML = value;
+      if (!el) return;
+      var html = String(value);
+      if (el.innerHTML !== html) el.innerHTML = html;
     }
 
 
@@ -1614,10 +1618,16 @@
       var el = document.getElementById('spark-' + id);
       if (!el) return;
       var color = sparkColors[id] || '#94a3b8';
-      el.innerHTML = arr.map(function(v){
-        var h = Math.max(12, Math.round(v));
-        return '<span style="height:' + h + '%;background:' + color + '"></span>';
-      }).join('');
+      while (el.children.length > arr.length) el.removeChild(el.lastElementChild);
+      arr.forEach(function(v, i) {
+        var bar = el.children[i];
+        if (!bar) {
+          bar = document.createElement('span');
+          el.appendChild(bar);
+        }
+        bar.style.height = Math.max(12, Math.round(v)) + '%';
+        bar.style.background = color;
+      });
     }
 
     var historyState = { cpu: [], gpu: [], netDown: [], netUp: [] };
@@ -1775,32 +1785,53 @@
     }
 
     function procRow(name, val, unit, opts) {
-      opts = opts || {};
       var row = document.createElement('div');
       row.className = 'proc-item';
+      row.appendChild(document.createElement('div')).className = 'proc-main';
+      row.appendChild(document.createElement('span')).className = 'proc-value';
+      updateProcRow(row, name, val, unit, opts);
+      return row;
+    }
 
-      var main = document.createElement('div');
-      main.className = 'proc-main';
+    function updateProcRow(row, name, val, unit, opts) {
+      opts = opts || {};
+      row.className = 'proc-item';
 
-      var n = document.createElement('span');
-      n.className = 'proc-name' + (opts.wrapName ? ' wrap' : '');
-      n.textContent = name;
-      n.title = name;
-      main.appendChild(n);
-
-      if (opts.meta) {
-        var meta = document.createElement('div');
-        meta.className = 'proc-meta';
-        meta.textContent = opts.meta;
-        main.appendChild(meta);
+      var main = row.querySelector('.proc-main');
+      var value = row.querySelector('.proc-value');
+      if (!main || !value) {
+        row.textContent = '';
+        main = document.createElement('div');
+        main.className = 'proc-main';
+        value = document.createElement('span');
+        value.className = 'proc-value';
+        row.appendChild(main);
+        row.appendChild(value);
       }
 
-      var v = document.createElement('span');
-      v.className = 'proc-value';
-      v.textContent = val + unit;
-      row.appendChild(main);
-      row.appendChild(v);
-      return row;
+      var label = main.querySelector('.proc-name');
+      if (!label) {
+        label = document.createElement('span');
+        main.insertBefore(label, main.firstChild);
+      }
+      label.className = 'proc-name' + (opts.wrapName ? ' wrap' : '');
+      if (label.textContent !== String(name)) label.textContent = name;
+      label.title = name;
+
+      var meta = main.querySelector('.proc-meta');
+      if (opts.meta) {
+        if (!meta) {
+          meta = document.createElement('div');
+          meta.className = 'proc-meta';
+          main.appendChild(meta);
+        }
+        if (meta.textContent !== String(opts.meta)) meta.textContent = opts.meta;
+      } else if (meta) {
+        meta.remove();
+      }
+
+      var valueText = val + unit;
+      if (value.textContent !== valueText) value.textContent = valueText;
     }
 
     function shownItems(kind, data) {
@@ -1824,35 +1855,78 @@
     function renderProcList(kind, elementId, unit, mapper, noun) {
       var el = document.getElementById(elementId);
       if (!el) return;
-      el.innerHTML = '';
-      shownItems(kind, latestViews[kind]).forEach(function(item) {
-        var mapped = mapper(item);
-        el.appendChild(procRow(mapped.name, mapped.value, unit, mapped.opts));
+      var items = shownItems(kind, latestViews[kind]).map(mapper);
+      while (el.children.length > items.length) el.removeChild(el.lastElementChild);
+      items.forEach(function(mapped, index) {
+        var row = el.children[index];
+        if (!row) {
+          el.appendChild(procRow(mapped.name, mapped.value, unit, mapped.opts));
+          return;
+        }
+        updateProcRow(row, mapped.name, mapped.value, unit, mapped.opts);
       });
       updateViewAllLink(kind, noun);
+    }
+
+    function temperatureRow() {
+      var row = document.createElement('div');
+      row.className = 'temp-row';
+      var label = document.createElement('div');
+      label.className = 'temp-label';
+      var value = document.createElement('div');
+      value.className = 'temp-value';
+      var track = document.createElement('div');
+      track.className = 'temp-bar-track';
+      var fill = document.createElement('div');
+      fill.className = 'temp-bar-fill';
+      track.appendChild(fill);
+      row.appendChild(label);
+      row.appendChild(value);
+      row.appendChild(track);
+      return row;
+    }
+
+    function updateTemperatureRow(row, sensor, index) {
+      var temp = sensor.value_c != null ? Number(sensor.value_c) : 0;
+      var name = sensor.label || sensor.source || ('Sensor ' + (index + 1));
+      var pct = Math.min(100, (temp / 100) * 100);
+      var grad;
+      if (temp >= 70) grad = 'linear-gradient(90deg, #f97316, #ef4444)';
+      else if (temp >= 55) grad = 'linear-gradient(90deg, #f59e0b, #f97316)';
+      else if (temp >= 40) grad = 'linear-gradient(90deg, #eab308, #f59e0b)';
+      else grad = 'linear-gradient(90deg, #22c55e, #10b981)';
+
+      var label = row.querySelector('.temp-label');
+      var value = row.querySelector('.temp-value');
+      var fill = row.querySelector('.temp-bar-fill');
+      if (!label || !value || !fill) {
+        var replacement = temperatureRow();
+        row.replaceWith(replacement);
+        row = replacement;
+        label = row.querySelector('.temp-label');
+        value = row.querySelector('.temp-value');
+        fill = row.querySelector('.temp-bar-fill');
+      }
+
+      if (label.textContent !== String(name)) label.textContent = name;
+      var valueText = temp.toFixed(1) + ' °C';
+      if (value.textContent !== valueText) value.textContent = valueText;
+      fill.style.width = pct + '%';
+      fill.style.background = grad;
     }
 
     function renderTemperatureRows() {
       var el = document.getElementById('temperatures');
       if (!el) return;
-      el.innerHTML = '';
-      shownItems('temps', latestViews.temps).forEach(function(sensor, i) {
-        var temp = sensor.value_c != null ? sensor.value_c : 0;
-        var name = sensor.label || sensor.source || ('Sensor ' + (i + 1));
-        var pct = Math.min(100, (temp / 100) * 100);
-        var grad;
-        if (temp >= 70) grad = 'linear-gradient(90deg, #f97316, #ef4444)';
-        else if (temp >= 55) grad = 'linear-gradient(90deg, #f59e0b, #f97316)';
-        else if (temp >= 40) grad = 'linear-gradient(90deg, #eab308, #f59e0b)';
-        else grad = 'linear-gradient(90deg, #22c55e, #10b981)';
-
-        var row = document.createElement('div');
-        row.className = 'temp-row';
-        row.innerHTML =
-          '<div class="temp-label">' + name + '</div>' +
-          '<div class="temp-value">' + temp.toFixed(1) + ' °C</div>' +
-          '<div class="temp-bar-track"><div class="temp-bar-fill" style="width:' + pct + '%;background:' + grad + '"></div></div>';
-        el.appendChild(row);
+      var items = shownItems('temps', latestViews.temps);
+      while (el.children.length > items.length) el.removeChild(el.lastElementChild);
+      items.forEach(function(sensor, i) {
+        var row = el.children[i];
+        if (!row) {
+          row = temperatureRow();
+          el.appendChild(row);
+        }
+        updateTemperatureRow(row, sensor, i);
       });
       updateViewAllLink('temps', 'sensors');
     }
@@ -2130,46 +2204,67 @@
       refreshRelativeTimestamp();
     }
 
+    function coreItem() {
+      var item = document.createElement('div');
+      item.className = 'core-item';
+      var value = document.createElement('span');
+      value.className = 'core-value';
+      var track = document.createElement('div');
+      track.className = 'core-track';
+      var fill = document.createElement('div');
+      fill.className = 'core-fill';
+      var name = document.createElement('span');
+      name.className = 'core-label';
+      track.appendChild(fill);
+      item.appendChild(value);
+      item.appendChild(track);
+      item.appendChild(name);
+      return item;
+    }
+
+    function updateCoreItem(item, pct, label) {
+      item.className = 'core-item';
+      item.title = label + ': ' + pct.toFixed(1) + '%';
+      var value = item.querySelector('.core-value');
+      var fill = item.querySelector('.core-fill');
+      var name = item.querySelector('.core-label');
+      if (!value || !fill || !name) {
+        var replacement = coreItem();
+        item.replaceWith(replacement);
+        item = replacement;
+        value = item.querySelector('.core-value');
+        fill = item.querySelector('.core-fill');
+        name = item.querySelector('.core-label');
+      }
+      var valueText = fmt(pct) + '%';
+      if (value.textContent !== valueText) value.textContent = valueText;
+      fill.style.height = Math.max(1, Math.min(100, pct)) + '%';
+      fill.style.background = 'linear-gradient(180deg, #38bdf8, #2563eb)';
+      if (name.textContent !== label) name.textContent = label;
+    }
+
     function updateCores() {
       if (!isPageActive()) return;
       req('/api/system/cores', function(text) {
         var lines = text.split('\n');
         var el = document.getElementById('cores');
-        el.innerHTML = '';
-        var count = 0;
+        if (!el) return;
+        var cores = [];
         for (var i = 0; i < lines.length; i++) {
           var parts = lines[i].split('\t');
           if (parts.length < 2) continue;
-          count += 1;
-          var pct = parseFloat(parts[0]) || 0;
-          var label = formatCoreLabel(parts[1], i);
-          var item = document.createElement('div');
-          item.className = 'core-item';
-          item.title = label + ': ' + pct.toFixed(1) + '%';
-
-          var value = document.createElement('span');
-          value.className = 'core-value';
-          value.textContent = fmt(pct) + '%';
-
-          var track = document.createElement('div');
-          track.className = 'core-track';
-
-          var fill = document.createElement('div');
-          fill.className = 'core-fill';
-          fill.style.height = Math.max(1, Math.min(100, pct)) + '%';
-          fill.style.background = 'linear-gradient(180deg, #38bdf8, #2563eb)';
-
-          var name = document.createElement('span');
-          name.className = 'core-label';
-          name.textContent = label;
-
-          track.appendChild(fill);
-          item.appendChild(value);
-          item.appendChild(track);
-          item.appendChild(name);
-          el.appendChild(item);
+          cores.push({ pct: parseFloat(parts[0]) || 0, label: formatCoreLabel(parts[1], cores.length) });
         }
-        el.style.setProperty('--core-count', String(Math.max(1, count)));
+        while (el.children.length > cores.length) el.removeChild(el.lastElementChild);
+        cores.forEach(function(core, index) {
+          var item = el.children[index];
+          if (!item) {
+            item = coreItem();
+            el.appendChild(item);
+          }
+          updateCoreItem(item, core.pct, core.label);
+        });
+        el.style.setProperty('--core-count', String(Math.max(1, cores.length)));
       });
     }
 
